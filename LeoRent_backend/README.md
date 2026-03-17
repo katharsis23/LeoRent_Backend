@@ -1,81 +1,75 @@
+
 # LeoRent Backend
 
+## Installation
 
-Цей проект використовує [Poetry](https://python-poetry.org/) для керування залежностями та віртуальним середовищем.
+1. Клонуй репозиторій
 
----
-
-## Prerequisites (Вимоги)
-
-Перед початком переконайся, що в тебе встановлено:
-- **Python**: версія `^3.14` (саме так вказано в нашому `pyproject.toml`)
-- **Poetry**: основний інструмент для керування проектом.
-
-Якщо Poetry ще немає, його можна встановити цією командою:
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
----
-
-##  Інструкція зі встановлення
-
-1. **Клонуй репозиторій:**
-   ```bash
    git clone <repository_url>
    cd LeoRent_Backend/LeoRent_backend
-   ```
+```
 
-2. **Налаштування віртуального середовища:**
-   Щоб Poetry створював `.venv` прямо в папці проекту (це дуже зручно для VS Code та інших IDE), виконай:
-   ```bash
+2. Завантаж poetry
+
+3. Налаштування poetry
+
+```bash
    poetry config virtualenvs.in-project true
-   ```
-
-3. **Створення env та встановлення залежностей:**
-   Ця команда автоматично створить віртуальне середовище та встановить усі бібліотеки:
-   ```bash
+   
    poetry install
+```
+
+4. Налаштування pre-commit хука(необхідно при contribution)
+
+   ```bash
+   cp ../scripts/pre-commit.bash ../.git/hooks/pre-commit
+   chmod +x ../.git/hooks/pre-commit
    ```
-   *Підказка: якщо потрібно встановити без dev-залежностей (якщо вони будуть), використовуй `poetry install --only main`.*
+
+   ```bash
+   cp ../scripts/pre-commit.bash ../.git/hooks/pre-commit
+   chmod +x ../.git/hooks/pre-commit
+   ```
 
 ---
 
-##  Використання (Usage)
+## Запуск проекту (Running)
 
-### Активація середовища
-Щоб увійти у віртуальне середовище:
-```bash
-poetry shell
-```
+Ми використовуємо **Invoke** для зручного запуску команд. Тобі не потрібно пам'ятати довгі прапорці uvicorn!
 
-### Запуск команд
-Ти можеш запускати скрипти без прямої активації shell:
+### Запуск сервера
 ```bash
-poetry run <command>
+poetry run inv dev
 ```
-Наприклад, для запуску сервера (за умови, що `main.py` знаходиться в пакеті):
-```bash
-poetry run uvicorn src.leorent_backend.main:app --reload
-```
+*Це запустить сервер за адресою `http://0.0.0.0:8000` з автоматичним перезавантаженням при зміні коду! *
 
 ---
 
-## Корисні команди Poetry
+## 🛠 Корисні команди (Invoke Tasks)
 
-- **Додати нову бібліотеку:**
-  ```bash
-  poetry add <package_name>
-  ```
-- **Оновити залежності:**
-  ```bash
-  poetry update
-  ```
-- **Видалити пакет:**
-  ```bash
-  poetry remove <package_name>
-  ```
-- **Переглянути інформацію про env:**
-  ```bash
-  poetry env info
-  ```
+Ми маємо спеціальний файл `tasks.py` з набором команд:
+
+- **`poetry run inv lint`** — перевірка коду лінтером (flake8).
+- **`poetry run inv test`** — запуск усіх тестів (pytest).
+- **`poetry run inv check`** — запуск лінтера та тестів одночасно (ідеально перед комітом!). 
+- **`poetry run inv clean`** — очищення кешу, тимчасових файлів та __pycache__.
+- **`poetry run inv --list`** — переглянути всі доступні команди.
+
+---
+
+## Керування залежностями (Poetry)
+
+- **Додати пакет:** `poetry add <package_name>`
+- **Додати dev-пакет:** `poetry add --group dev <package_name>`
+- **Оновити все:** `poetry update`
+- **Інфо про env:** `poetry env info`
+
+---
+
+## Тестування
+
+Всі тести знаходяться в папці `tests/`. Ти можеш запустити їх через invoke:
+```bash
+poetry run inv test
+```
