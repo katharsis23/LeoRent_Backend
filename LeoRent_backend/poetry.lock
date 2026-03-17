@@ -548,6 +548,18 @@ files = [
 ]
 
 [[package]]
+name = "invoke"
+version = "2.2.1"
+description = "Pythonic task execution"
+optional = false
+python-versions = ">=3.6"
+groups = ["dev"]
+files = [
+    {file = "invoke-2.2.1-py3-none-any.whl", hash = "sha256:2413bc441b376e5cd3f55bb5d364f973ad8bdd7bf87e53c79de3c11bf3feecc8"},
+    {file = "invoke-2.2.1.tar.gz", hash = "sha256:515bf49b4a48932b79b024590348da22f39c4942dff991ad1fb8b8baea1be707"},
+]
+
+[[package]]
 name = "loguru"
 version = "0.7.3"
 description = "Python logging made (stupidly) simple"
@@ -1571,4 +1583,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "46dba1b2b9ac83bd08af722c7b36c5e427e79119958822cfb722c28fdda48da6"
+content-hash = "6a84c2553b3502197990e245cf29c02a810c24f1a99bcff37267c8f3fc3cfc7c"

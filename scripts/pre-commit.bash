@@ -34,7 +34,7 @@ fi
 # ────────────────────────────────────────────────────────────────
 info "Linter(flake8)..."
 
-if ! poetry run flake8 .; then
+if ! poetry run inv lint; then
     error "Flake8 has encountered linter issues. Aborted..."
     error "Please Solve it"
     exit 1
@@ -47,7 +47,7 @@ success "flake8 — success"
 # ────────────────────────────────────────────────────────────────
 info "Running tests (pytest)..."
 
-if ! poetry run pytest -q --no-header; then
+if ! poetry run inv test; then
     error "Tests error"
     error "Aborted"
     exit 1
