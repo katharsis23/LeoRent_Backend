@@ -209,3 +209,7 @@ __marimo__/
 
 # .ENV
 **/.env/**
+
+
+# Poetry
+poetry.lock
