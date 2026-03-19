@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build: 
+      context: .
+      args:
+        - MODE=debug
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./LeoRent_backend:/app
+    env_file:
+      - .env.example
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck/"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    restart: unless-stopped
+    networks:
+      - leorent_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_container
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-leouser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leopass}
+      POSTGRES_DB: ${POSTGRES_DB:-leodb}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5430:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - leorent_network
+
+volumes:
+  postgres_data:
+
+networks:
+  leorent_network:
+    driver: bridge
+    
