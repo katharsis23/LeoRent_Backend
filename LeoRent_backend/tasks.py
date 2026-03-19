@@ -12,6 +12,8 @@ Invoke tasks list:
     inv build   Builds package (poetry build) !!!{deprecated}
     inv all     Runs lint → test → build
     inv clean   Cleans up temporary files, cache etc
+    inv docker-compose-up Runs docker-compose locally
+    inv docker-compose-down Stops docker-compose locally
 """
 
 # TODO:
@@ -140,6 +142,20 @@ def clean(c: Context):
     success("Cleared")
 
 
+@task
+def docker_compose_up(c: Context):
+    """Runs docker-compose up"""
+    info("Running docker-compose up...")
+    c.run("docker-compose up")
+
+
+@task
+def docker_compose_down(c: Context):
+    """Runs docker-compose down"""
+    info("Running docker-compose down...")
+    c.run("docker-compose down")
+
+
 ns = Collection(
     lint,
     test,
@@ -148,4 +164,6 @@ ns = Collection(
     # build,
     all,
     clean,
+    docker_compose_up,
+    docker_compose_down,
 )

@@ -4,6 +4,8 @@ from loguru import logger
 from contextlib import asynccontextmanager
 # Routers
 from src.leorent_backend.routers.healthcheck import healthcheck_router
+from src.leorent_backend.database import BASE, engine
+import sys
 
 
 app = FastAPI(
@@ -31,7 +33,14 @@ app.add_middleware(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Server is starting...")
+    try:
+        logger.info("Server is starting...")
+        logger.debug("CREATING TABLES")
+        BASE.metadata.create_all(bind=engine)
+        logger.debug("TABLES CREATED")
+    except Exception as e:
+        logger.error(f"Server failed to start: {e}")
+        sys.exit(1)
     yield
     logger.info("Server is shutting down...")
 

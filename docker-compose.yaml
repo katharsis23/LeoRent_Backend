@@ -16,11 +16,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck/"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
     restart: unless-stopped
     networks:
       - leorent_network
