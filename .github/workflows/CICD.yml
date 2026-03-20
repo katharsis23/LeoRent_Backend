@@ -10,6 +10,10 @@ jobs:
   build-and-qa:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: LeoRent_backend
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,8 +33,8 @@ jobs:
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          path: LeoRent_backend/.venv
+          key: venv-${{ runner.os }}-${{ hashFiles('LeoRent_backend/poetry.lock') }}
 
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
