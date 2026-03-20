@@ -3,7 +3,12 @@ from pydantic import Field, SecretStr
 
 
 class DatabaseSettings(BaseSettings):
-    database_url: SecretStr = Field(alias="DATABASE_URL")
+    database_url: SecretStr = Field(
+        alias="DATABASE_URL",
+        default=SecretStr(
+            "postgresql+asyncpg://leouser:leopass@localhost:5432/leodb"
+        )
+    )
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
