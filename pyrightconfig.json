@@ -1,0 +1,11 @@
+{
+    "include": [
+        "LeoRent_backend/src"
+    ],
+    "venvPath": "LeoRent_backend",
+    "venv": ".venv",
+    "extraPaths": [
+        "LeoRent_backend/src"
+    ],
+    "typeCheckingMode": "basic"
+}
