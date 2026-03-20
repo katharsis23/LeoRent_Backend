@@ -36,13 +36,19 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Server is starting...")
         logger.debug("CREATING TABLES")
-        BASE.metadata.create_all(bind=engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(BASE.metadata.create_all)
         logger.debug("TABLES CREATED")
     except Exception as e:
         logger.error(f"Server failed to start: {e}")
-        sys.exit(1)
+        # sys.exit(1)  # Optional: depends on if we want to kill host
     yield
     logger.info("Server is shutting down...")
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    return {"message": "LeoRent Backend is running! ♡", "docs": "/docs"}
 
 
 app.include_router(healthcheck_router)
