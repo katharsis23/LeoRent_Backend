@@ -101,7 +101,7 @@ def dev(c: Context, reload=True):
     reload_flag = "--reload" if reload else ""
     poetry_run(
         c,
-        f"uvicorn src.leorent_backend.main:app --host 0.0.0.0 "
+        f"uvicorn leorent_backend.main:app --host 0.0.0.0 "
         f"--port 8000 {reload_flag}",
     )
 
