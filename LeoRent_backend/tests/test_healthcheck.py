@@ -8,12 +8,12 @@ def test_healthcheck():
     assert response.json() == {"status": "ok", "message": "Server is running"}
 
 
-# @mark.skip(
-#     """
-#     You can toggle this integration test for local development,
-#     but dont enable it in CI/CD
-#     """
-# )
+@mark.skip(
+    """
+    You can toggle this integration test for local development,
+    but dont enable it in CI/CD
+    """
+)
 def test_healthcheck_db():
     response = client.get("/healthcheck/db")
     assert response.status_code == 200

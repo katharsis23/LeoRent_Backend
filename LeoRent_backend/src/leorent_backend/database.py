@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from src.leorent_backend.config.database import DATABASE_CONFIG
 from sqlalchemy.future import select
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from typing import AsyncGenerator
 from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
