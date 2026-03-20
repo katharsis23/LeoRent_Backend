@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from contextlib import asynccontextmanager
 # Routers
-from leorent_backend.routers.healthcheck import healthcheck_router
-from leorent_backend.database import BASE, engine
+from src.leorent_backend.routers.healthcheck import healthcheck_router
+from src.leorent_backend.database import BASE, engine
 import sys  # Keep for potential future use or just remove ♡
 # sys is not really needed here if it's commented out later, but I'll just remove the unused line to make it cleaner! ♡
 

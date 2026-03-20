@@ -1,7 +1,7 @@
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import JSON, String, Integer, Boolean, Text, Float, ForeignKey
-from leorent_backend.database import BASE
+from src.leorent_backend.database import BASE
 from uuid import UUID as PythonUUID, uuid4
 from enum import Enum
 from typing import Optional, Dict, Any, List
