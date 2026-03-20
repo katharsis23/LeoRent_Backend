@@ -14,6 +14,9 @@ jobs:
       run:
         working-directory: LeoRent_backend
 
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
