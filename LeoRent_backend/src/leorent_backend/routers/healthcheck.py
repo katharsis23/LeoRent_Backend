@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException, status
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from src.leorent_backend.database import test_connection
+from leorent_backend.database import test_connection
 
 healthcheck_router = APIRouter(
     prefix="/healthcheck",

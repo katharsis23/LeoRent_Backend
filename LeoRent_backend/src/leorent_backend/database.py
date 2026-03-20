@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import (
     create_async_engine, async_sessionmaker, AsyncSession
 )
-from src.leorent_backend.config.database import DATABASE_CONFIG
+from leorent_backend.config.database import DATABASE_CONFIG
 from sqlalchemy.future import select
 from sqlalchemy.orm import declarative_base
 from typing import AsyncGenerator
