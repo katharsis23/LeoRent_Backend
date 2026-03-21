@@ -213,3 +213,10 @@ __marimo__/
 
 # Poetry
 poetry.lock
+
+
+#VS code
+.vscode/
+
+#   Firebase
+leorent-*.json
