@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2025-03-21 by *katharsis23*
+## [Released] - 2026-03-21 by *katharsis23*
 
 ### Added
 - **Authentication Endpoints**: Implemented `/users/signup/v1` and `/users/login/v1` endpoints without Firebase integration
