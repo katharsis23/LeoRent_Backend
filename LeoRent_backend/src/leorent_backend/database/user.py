@@ -1,51 +1,70 @@
 from src.leorent_backend.models import Users
-from src.leorent_backend.database import get_db
+from src.leorent_backend.schemas.user import CreateUser, LoginUser
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import Optional
-from uuid import UUID as PythonUUID
 from sqlalchemy.exc import SQLAlchemyError
+import bcrypt
+from uuid import UUID
+from typing import Optional
 from loguru import logger
+# from fastapi import HTTPException, status
+# from fastapi.responses import JSONResponse
 
 
-async def find_user_by_id(user_id: PythonUUID, db: AsyncSession) -> Optional[Users]:
-    """
-    Main function to find user by his UUID
-
-    Returns User object if found, else None
-    """
+async def find_user_by_id(user: UUID, db: AsyncSession) -> Optional[Users]:
     try:
-        query = await db.execute(select(Users).where(Users.id_ == user_id))
-        user = query.scalar_one_or_none()
-        return user
+        query = await db.execute(select(Users).where(Users.id == user))
+        return query.scalar_one_or_none()
     except SQLAlchemyError as e:
-        logger.error(f"Error finding user by ID: {e}")
+        logger.error(f"Error finding user by id: {e}")
         return None
 
 
-async def find_user_by_firebase_uid(
-    firebase_uid: str, db: AsyncSession
-) -> Optional[Users]:
-    """
-    Find user by Firebase UID
-
-    Args:
-        firebase_uid: Firebase user UID
-        db: Database session
-
-    Returns:
-        Users: User object if found, else None
-    """
+async def create_user(user: CreateUser, db: AsyncSession) -> Optional[Users]:
     try:
-        query = await db.execute(
-            select(Users).where(Users.firebase_uid == firebase_uid)
+        # Check on Phone number, Email and Username uniqueness
+        user_with_duplicate_fields = await db.execute(select(Users).where(
+            (Users.username == user.username) |
+            (Users.email == user.email) |
+            (Users.phone_number == user.phone)
+        ))
+        if user_with_duplicate_fields.scalar_one_or_none():
+
+            return None
+        password = bcrypt.hashpw(
+            user.password.encode('utf-8'),
+            bcrypt.gensalt()
+        ).decode('utf-8')
+        new_user = Users(
+            username=user.username,
+            email=user.email,
+            phone_number=user.phone,
+            password=password
         )
-        user = query.scalar_one_or_none()
-        return user
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+        return new_user
     except SQLAlchemyError as e:
-        logger.error(f"Error finding user by Firebase UID: {e}")
+        logger.error(f"Error creating user: {e}")
         return None
 
 
-async def create_user() -> Optional[Users]:
-    pass
+async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
+    try:
+        query = await db.execute(select(Users).where(Users.email == user.email))
+        existing_user = query.scalar_one_or_none()
+
+        if not existing_user:
+            return None
+
+        if not bcrypt.checkpw(
+            user.password.encode('utf-8'),
+            existing_user.password.encode('utf-8')
+        ):
+            return None
+        return existing_user
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error logging in user: {e}")
+        return None

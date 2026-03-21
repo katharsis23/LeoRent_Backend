@@ -218,5 +218,5 @@ poetry.lock
 #VS code
 .vscode/
 
-# Firebase
-leorent-firebase-*.json
+#   Firebase
+leorent-*.json

@@ -1,13 +1,12 @@
-from math import e
+
 from fastapi_utils.cbv import cbv
 from fastapi import APIRouter
 from fastapi import HTTPException, status, Depends
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from leorent_backend.database import test_connection, get_session
+from src.leorent_backend.database_connector import test_connection
+from src.leorent_backend.database_connector import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from leorent_backend.models import Users
 from loguru import logger
 
 
@@ -55,7 +54,7 @@ class HealthCheck:
                             500 if Server is not running
                             """
                             )
-    async def healthcheck_db(self, db: AsyncSession = Depends(get_session)):
+    async def healthcheck_db(self, db: AsyncSession = Depends(get_db)):
         try:
             await test_connection()
 
