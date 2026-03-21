@@ -63,24 +63,6 @@ class Users(BASE):
         default=False
     )
 
-    # Firebase integration fields
-    firebase_uid: Mapped[Optional[str]] = mapped_column(
-        String(128),
-        nullable=True,
-        unique=True
-    )
-
-    firebase_email_verified: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False
-    )
-
-    profile_data: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        JSON,
-        nullable=True
-    )
-
     # Relationships
     apartments: Mapped[List["Apartment"]] = relationship(
         "Apartment",
@@ -231,7 +213,7 @@ class Pictures(BASE):
         default=False
     )
 
-    metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON,
         nullable=True
     )
