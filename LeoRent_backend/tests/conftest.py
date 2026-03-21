@@ -16,7 +16,7 @@ def client():
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
-    
+
     # Clear the engine pool to avoid loop mismatch in next test
     try:
         loop = asyncio.get_event_loop()

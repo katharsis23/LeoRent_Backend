@@ -45,7 +45,7 @@ def test_signup_v1_duplicate_email_rejected(client, signup_payload):
 def test_login_v1_success(client, signup_payload, login_payload):
     # Need to use the same email for both
     login_payload["email"] = signup_payload["email"]
-    
+
     response1 = client.post("/users/signup/v1", json=signup_payload)
     assert response1.status_code == 201
 
