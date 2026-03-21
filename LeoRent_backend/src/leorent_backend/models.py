@@ -1,7 +1,7 @@
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import JSON, String, Integer, Boolean, Text, Float, ForeignKey
-from src.leorent_backend.database import BASE
+from src.leorent_backend.database_connector import BASE
 from uuid import UUID as PythonUUID, uuid4
 from enum import Enum
 from typing import Optional, Dict, Any, List
@@ -61,24 +61,6 @@ class Users(BASE):
         Boolean,
         nullable=False,
         default=False
-    )
-
-    # Firebase integration fields
-    firebase_uid: Mapped[Optional[str]] = mapped_column(
-        String(128),
-        nullable=True,
-        unique=True
-    )
-
-    firebase_email_verified: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False
-    )
-
-    profile_data: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        JSON,
-        nullable=True
     )
 
     # Relationships
@@ -231,7 +213,7 @@ class Pictures(BASE):
         default=False
     )
 
-    metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON,
         nullable=True
     )
