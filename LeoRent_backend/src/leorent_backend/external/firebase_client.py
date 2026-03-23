@@ -14,7 +14,7 @@ def get_firebase_app():
                 )
                 return None
 
-            cred_dict = FIREBASE_CONFIG.credentials_dict(FIREBASE_CONFIG)
+            cred_dict = FIREBASE_CONFIG.credentials_dict
             cred = credentials.Certificate(cred_dict)
             return firebase_admin.initialize_app(cred)
         return firebase_admin._apps[0]

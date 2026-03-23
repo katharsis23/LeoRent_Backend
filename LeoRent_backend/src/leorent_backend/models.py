@@ -63,6 +63,21 @@ class Users(BASE):
         default=False
     )
 
+    firebase_uid: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        unique=True
+    )
+
+    first_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
+
+    last_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
     # Relationships
     apartments: Mapped[List["Apartment"]] = relationship(
         "Apartment",

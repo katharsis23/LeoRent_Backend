@@ -1,10 +1,12 @@
-from src.leorent_backend.external.firebase_client import firebase_app
+from src.leorent_backend.database.user import (
+    create_user_from_firebase, find_user_by_firebase_uid
+)
+from src.leorent_backend.external import firebase_client
 from firebase_admin import auth
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.leorent_backend.database import get_db
-from src.leorent_backend.database.user import find_user_by_firebase_uid
+from src.leorent_backend.database_connector import get_db
 from src.leorent_backend.models import Users
 from loguru import logger
 from typing import Optional
@@ -36,7 +38,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not firebase_app:
+    if not firebase_client.firebase_app:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Firebase service not available",
@@ -44,7 +46,11 @@ async def get_current_user(
 
     try:
         # Verify Firebase ID token
-        decoded_token = auth.verify_id_token(credentials.credentials)
+        decoded_token = auth.verify_id_token(
+            credentials.credentials,
+            check_revoked=True,
+            clock_skew_seconds=10
+        )
         firebase_uid = decoded_token.get('uid')
 
         if not firebase_uid:
@@ -55,10 +61,13 @@ async def get_current_user(
 
         # Find user in database
         user = await find_user_by_firebase_uid(firebase_uid, db)
-
-        # if not user:
-        #     # Create new user if doesn't exist
-        #     user = await create_user_from_firebase(decoded_token, db)
+        if not user:
+            # Extract user info from Firebase token
+            first_name = decoded_token.get('first_name', '')
+            last_name = decoded_token.get('last_name', '')
+            user = await create_user_from_firebase(
+                decoded_token, first_name, last_name, db
+            )
 
         if not user:
             raise HTTPException(

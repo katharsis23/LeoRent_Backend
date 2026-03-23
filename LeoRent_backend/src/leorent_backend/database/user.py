@@ -23,6 +23,8 @@ async def find_user_by_id(user: UUID, db: AsyncSession) -> Optional[Users]:
 async def create_user(user: CreateUser, db: AsyncSession) -> Optional[Users]:
     try:
         # Check on Phone number, Email and Username uniqueness
+
+        # TODO: Consider commenting next code for optimisation
         user_with_duplicate_fields = await db.execute(select(Users).where(
             (Users.username == user.username) |
             (Users.email == user.email) |
@@ -67,4 +69,83 @@ async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
 
     except SQLAlchemyError as e:
         logger.error(f"Error logging in user: {e}")
+        return None
+
+
+async def find_user_by_firebase_uid(firebase_uid: str, db: AsyncSession) -> Optional[Users]:
+    try:
+        query = await db.execute(select(Users).where(Users.firebase_uid == firebase_uid))
+        return query.scalar_one_or_none()
+    except SQLAlchemyError as e:
+        logger.error(f"Error finding user by firebase uid: {e}")
+        return None
+
+
+async def create_user_from_firebase(decoded_token: dict, first_name: str, last_name: str, db: AsyncSession) -> Optional[Users]:
+    try:
+        # Extract required fields from Firebase token
+        firebase_uid = decoded_token.get('uid')
+        email = decoded_token.get('email')
+        phone = decoded_token.get('phone')
+
+        if not firebase_uid:
+            logger.error("Firebase UID is required")
+            return None
+
+        if not email:
+            logger.error("Email is required from Firebase token")
+            return None
+
+        # TODO: Change this shit either !!!
+
+        # Generate phone number if not provided
+        if not phone:
+            phone = "+0000000000"  # Default placeholder for Firebase users
+
+        # Hope we trust DB to avoid redundant check below
+
+        # Check for duplicate users by email, phone, or firebase_uid
+        # user_with_duplicate_fields = await db.execute(select(Users).where(
+        #     (Users.email == email) |
+        #     (Users.phone_number == phone) |
+        #     (Users.firebase_uid == firebase_uid)
+        # ))
+        # if user_with_duplicate_fields.scalar_one_or_none():
+        #     logger.warning("User with duplicate fields already exists")
+        #     return None
+
+        # Generate username from email for Firebase users
+        # Extract username from email (part before @)
+        # TODO:
+        # Change it after proceed with migration to make username nullable and not unique
+
+        if email and '@' in email:
+            username = email.split('@')[0]
+        else:
+            username = f"firebase_user_{firebase_uid[:8]}"
+
+        # Check for username uniqueness and append number if needed
+        existing_user = await db.execute(
+            select(Users).where(Users.username == username)
+        )
+        if existing_user.scalar_one_or_none():
+            # Append random number to make unique
+            import random
+            username = f"{username}_{random.randint(1000, 9999)}"
+
+        new_user = Users(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone_number=phone,
+            firebase_uid=firebase_uid,
+            password=None  # Firebase users don't have local passwords
+        )
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+        return new_user
+    except SQLAlchemyError as e:
+        logger.error(f"Error creating user from firebase: {e}")
         return None
