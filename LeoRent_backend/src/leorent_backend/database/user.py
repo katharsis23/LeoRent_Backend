@@ -23,6 +23,8 @@ async def find_user_by_id(user: UUID, db: AsyncSession) -> Optional[Users]:
 async def create_user(user: CreateUser, db: AsyncSession) -> Optional[Users]:
     try:
         # Check on Phone number, Email and Username uniqueness
+
+        # TODO: Consider commenting next code for optimisation
         user_with_duplicate_fields = await db.execute(select(Users).where(
             (Users.username == user.username) |
             (Users.email == user.email) |
@@ -67,4 +69,50 @@ async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
 
     except SQLAlchemyError as e:
         logger.error(f"Error logging in user: {e}")
+        return None
+
+
+async def find_user_by_firebase_uid(firebase_uid: str, db: AsyncSession) -> Optional[Users]:
+    try:
+        query = await db.execute(select(Users).where(Users.firebase_uid == firebase_uid))
+        return query.scalar_one_or_none()
+    except SQLAlchemyError as e:
+        logger.error(f"Error finding user by firebase uid: {e}")
+        return None
+
+
+async def create_user_from_firebase(
+    decoded_token: dict,
+    first_name: str,
+    last_name: str,
+    db: AsyncSession
+) -> Optional[Users]:
+    try:
+        # Extract required fields from Firebase token
+        firebase_uid = decoded_token.get('uid')
+        email = decoded_token.get('email')
+        phone = decoded_token.get('phone')
+
+        if not firebase_uid:
+            logger.error("Firebase UID is required")
+            return None
+
+        if not email:
+            logger.error("Email is required from Firebase token")
+            return None
+
+        new_user = Users(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone_number=phone,
+            firebase_uid=firebase_uid,
+            password=None
+        )
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+        return new_user
+    except SQLAlchemyError as e:
+        logger.error(f"Error creating user from firebase: {e}")
         return None
