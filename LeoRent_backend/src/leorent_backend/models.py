@@ -30,13 +30,13 @@ class Users(BASE):
 
     username: Mapped[str] = mapped_column(
         String(50),
-        nullable=False,
+        nullable=True,
         unique=True
     )
 
     password: Mapped[str] = mapped_column(
         String(255),
-        nullable=True
+        nullable=False
     )
 
     email: Mapped[str] = mapped_column(
@@ -218,6 +218,7 @@ class Pictures(BASE):
         nullable=False
     )
 
+    # TODO: Consider adding the default value
     url: Mapped[str] = mapped_column(
         String(255),
         nullable=False
