@@ -58,7 +58,8 @@ async def download_photo(file_key: str):
     return StreamingResponse(
         BytesIO(photo_bytes),
         media_type="image/jpeg",
-        headers={"Content-Disposition": f"attachment; filename={file_key.split('/')[-1]}"}
+        headers={
+            "Content-Disposition": f"attachment; filename={file_key.split('/')[-1]}"}
     )
 
 

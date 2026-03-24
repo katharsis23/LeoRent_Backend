@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, SecretStr
 
 
 class BackblazeSettings(BaseSettings):
@@ -9,9 +9,9 @@ class BackblazeSettings(BaseSettings):
         default=""
     )
 
-    secret_key: str = Field(
+    secret_key: SecretStr = Field(
         alias="BACKBLAZE_SECRET_KEY",
-        default=""
+        default=SecretStr("")
     )
 
     bucket_name: str = Field(

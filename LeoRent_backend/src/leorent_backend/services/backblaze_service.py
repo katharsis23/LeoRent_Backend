@@ -18,7 +18,7 @@ class BackblazeService:
             service_name="s3",
             endpoint_url=BACKBLAZE_CONFIG.endpoint_url,
             aws_access_key_id=BACKBLAZE_CONFIG.access_key,
-            aws_secret_access_key=BACKBLAZE_CONFIG.secret_key,
+            aws_secret_access_key=BACKBLAZE_CONFIG.secret_key.get_secret_value(),
             region_name="eu-central-003",
         )
         self.bucket_name = BACKBLAZE_CONFIG.bucket_name
