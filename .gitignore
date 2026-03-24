@@ -220,3 +220,11 @@ poetry.lock
 
 #   Firebase
 leorent-*.json
+
+
+# Alembic
+alembic/
+alembic.ini
+
+# Firebase test
+firebase_test.html

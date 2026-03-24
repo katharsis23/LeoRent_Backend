@@ -26,10 +26,16 @@ class Users(BASE):
         UUID(as_uuid=True), primary_key=True, default=uuid4
     )
 
-    username: Mapped[str] = mapped_column(
-        String(50), nullable=False, unique=True)
+    username: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+        unique=True
+    )
 
-    password: Mapped[str] = mapped_column(String(255), nullable=True)
+    password: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True
+    )
 
     email: Mapped[str] = mapped_column(
         String(100), nullable=False, unique=True)
@@ -38,12 +44,30 @@ class Users(BASE):
         ENUM(UserType), nullable=False, default=UserType.DEFAULT
     )
 
-    phone_number: Mapped[str] = mapped_column(
-        String(20), nullable=False, unique=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(
+        String(20),
+        nullable=True,
+        unique=True
+    )
 
     is_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False)
 
+    firebase_uid: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        unique=True
+    )
+
+    first_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
+
+    last_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
     # Relationships
     apartments: Mapped[List["Apartment"]] = relationship(
         "Apartment", back_populates="owner_user", cascade="all, delete-orphan"
@@ -125,7 +149,11 @@ class Pictures(BASE):
         nullable=False,
     )
 
-    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    # TODO: Consider adding the default value
+    url: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
 
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
