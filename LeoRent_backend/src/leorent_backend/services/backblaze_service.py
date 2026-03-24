@@ -8,7 +8,6 @@ import httpx
 import asyncio
 from loguru import logger
 from typing import Optional
-from io import BytesIO
 from botocore.exceptions import ClientError
 from src.leorent_backend.config.backblaze import BACKBLAZE_CONFIG
 

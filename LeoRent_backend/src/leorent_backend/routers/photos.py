@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from src.leorent_backend.schemas.photo import UploadPhotoRequest, UploadPhotoResponse
 from src.leorent_backend.services.backblaze_service import backblaze_service
 from io import BytesIO

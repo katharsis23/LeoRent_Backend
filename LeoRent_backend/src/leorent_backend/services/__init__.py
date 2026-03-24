@@ -7,7 +7,6 @@ import boto3
 from botocore.exceptions import ClientError
 from loguru import logger
 from typing import Optional
-from io import BytesIO
 import httpx
 from src.leorent_backend.config.backblaze import BACKBLAZE_CONFIG
 
