@@ -8,6 +8,7 @@ import asyncio
 @pytest.fixture(scope="function")
 def client():
     """Test client with overridden DB dependency."""
+
     async def override_get_db():
         async with AsyncSessionLocal() as session:
             yield session

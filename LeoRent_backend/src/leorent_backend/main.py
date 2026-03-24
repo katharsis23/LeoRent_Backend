@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from contextlib import asynccontextmanager
+
 # Routers
 from src.leorent_backend.routers.healthcheck import healthcheck_router
 from src.leorent_backend.database_connector import BASE, engine
 from src.leorent_backend.routers.user import user_router
+from src.leorent_backend.routers.photos import photo_router
 from src.leorent_backend.routers.firebase import firebase_router
 
 
@@ -49,7 +51,7 @@ app.add_middleware(
 async def root():
     return {"message": "LeoRent Backend is running! ♡", "docs": "/docs"}
 
-
+app.include_router(photo_router)
 app.include_router(healthcheck_router)
 app.include_router(user_router)
 app.include_router(firebase_router)

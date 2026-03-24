@@ -7,6 +7,7 @@ import bcrypt
 from uuid import UUID
 from typing import Optional
 from loguru import logger
+
 # from fastapi import HTTPException, status
 # from fastapi.responses import JSONResponse
 
@@ -34,14 +35,13 @@ async def create_user(user: CreateUser, db: AsyncSession) -> Optional[Users]:
 
             return None
         password = bcrypt.hashpw(
-            user.password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
+            user.password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
         new_user = Users(
             username=user.username,
             email=user.email,
             phone_number=user.phone,
-            password=password
+            password=password,
         )
         db.add(new_user)
         await db.commit()
@@ -61,8 +61,8 @@ async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
             return None
 
         if not bcrypt.checkpw(
-            user.password.encode('utf-8'),
-            existing_user.password.encode('utf-8')
+            user.password.encode(
+                "utf-8"), existing_user.password.encode("utf-8")
         ):
             return None
         return existing_user
