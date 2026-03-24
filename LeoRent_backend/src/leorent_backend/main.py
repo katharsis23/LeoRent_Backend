@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from src.leorent_backend.routers.healthcheck import healthcheck_router
 from src.leorent_backend.database_connector import BASE, engine
 from src.leorent_backend.routers.user import user_router
-
+from src.leorent_backend.routers.photos import photo_router
 
 # Change in the future with table metadata adding
 
@@ -50,6 +50,6 @@ app.add_middleware(
 async def root():
     return {"message": "LeoRent Backend is running! ♡", "docs": "/docs"}
 
-
+app.include_router(photo_router)
 app.include_router(healthcheck_router)
 app.include_router(user_router)
