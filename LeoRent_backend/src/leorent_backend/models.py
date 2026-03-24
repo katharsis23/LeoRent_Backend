@@ -28,13 +28,13 @@ class Users(BASE):
         default=uuid4
     )
 
-    username: Mapped[str] = mapped_column(
+    username: Mapped[Optional[str]] = mapped_column(
         String(50),
-        nullable=False,
+        nullable=True,
         unique=True
     )
 
-    password: Mapped[str] = mapped_column(
+    password: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True
     )
@@ -51,9 +51,9 @@ class Users(BASE):
         default=UserType.DEFAULT
     )
 
-    phone_number: Mapped[str] = mapped_column(
+    phone_number: Mapped[Optional[str]] = mapped_column(
         String(20),
-        nullable=False,
+        nullable=True,
         unique=True
     )
 
@@ -63,6 +63,21 @@ class Users(BASE):
         default=False
     )
 
+    firebase_uid: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        unique=True
+    )
+
+    first_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
+
+    last_name: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True
+    )
     # Relationships
     apartments: Mapped[List["Apartment"]] = relationship(
         "Apartment",
@@ -203,6 +218,7 @@ class Pictures(BASE):
         nullable=False
     )
 
+    # TODO: Consider adding the default value
     url: Mapped[str] = mapped_column(
         String(255),
         nullable=False

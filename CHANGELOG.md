@@ -2,7 +2,95 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2025-03-21 by *katharsis23*
+## [UnReleased] - 2026-03-23 by *katharsis23*
+
+### Added
+- **Firebase Authentication**: Complete Firebase integration with ID token verification
+  - `/users/firebase-auth/v1` endpoint for JSON body authentication
+  - `/firebase/signup` endpoint for Bearer token authentication  
+  - `/firebase/me` endpoint for user profile retrieval
+  - Firebase Admin SDK integration with service account configuration
+  - Automatic user creation from Firebase tokens
+  - Support for Email/Password and Google OAuth providers
+
+- **Database Schema**: Extended Users model for Firebase support
+  - Added `firebase_uid` field (unique, nullable)
+  - Added `first_name` field (optional, nullable)
+  - Added `last_name` field (optional, nullable)
+  - Made `username` and `phone_number` nullable for Firebase users
+  - Added `firebase_email_verified` boolean field
+
+- **Firebase Configuration**:
+  - `FirebaseSettings` class with environment variable support
+  - Service account credentials handling
+  - Firebase app initialization with error handling
+  - Updated `.env.example` with Firebase configuration template
+
+- **Testing Infrastructure**:
+  - Created `tests/test_firebase_auth.py` with comprehensive Firebase tests
+  - Mock Firebase app and token verification for isolated testing
+  - Test coverage for success, failure, and service unavailable scenarios
+  - Created `firebase_test.html` frontend for manual testing
+
+- **Frontend Testing Tool**:
+  - Email/Password and Google OAuth login forms
+  - Manual token input for debugging
+  - Token display and copy functionality
+  - API endpoint testing with detailed logging
+
+### Changed
+- **Database Migration**: Updated Users table schema for Firebase compatibility
+  - Added Firebase-specific fields for token-based authentication
+  - Backward compatibility with existing local authentication
+
+- **User Creation Logic**: Enhanced Firebase user handling
+  - __Username generation from email (`` → ``).__ 
+  - __Automatic phone number generation for Firebase users (`+0000000000`).__
+  - __Username uniqueness validation with random suffix for duplicates__
+  - First/last name extraction from Firebase tokens
+
+- **Authentication Flow**: Dual authentication support
+  - Local bcrypt authentication (existing `/users/signup/v1`, `/users/login/v1`)
+  - Firebase token-based authentication (new `/firebase/*` endpoints)
+  - Unified user model supporting both authentication methods
+
+### Fixed
+- **Firebase Token Handling**: Fixed token extraction and validation
+  - Proper Firebase app initialization checking
+  - Token verification with revocation checking
+  - User creation fallback when Firebase user doesn't exist in local DB
+
+- **Database Constraints**: Resolved NOT NULL constraint violations
+  - Fixed username generation for Firebase users
+  - Added phone number placeholder for missing phone data
+  - Proper handling of optional fields in Firebase authentication
+
+### Technical Details
+- **Firebase Integration**: Uses Firebase Admin SDK with service account authentication
+  - Token verification: `auth.verify_id_token(token, check_revoked=True)`
+  - User creation: `create_user_from_firebase(decoded_token, first_name, last_name, db)`
+  - Configuration via environment variables with `FIREBASE_*` prefixes
+
+- **Authentication Methods**:
+  - **Local**: bcrypt password hashing and verification
+  - **Firebase**: ID token verification with automatic user sync
+  - **Hybrid**: Single user table supporting both authentication types
+
+- **Testing Strategy**:
+  - Mock-based testing for Firebase services
+  - Database transaction rollback for test isolation
+  - Comprehensive error scenario coverage
+
+> **NEEDS FIX OR REFACTOR**
+> - *create_user_from_firebase* function needs refactoring to handle edge cases better. Delete redundant logic to username
+>   simulation or phone simulation.
+> - *migration* - Migration to create Username nullable and NOT UNIQUE. 
+> - *tests* - Tests need to be rewritten to clear the database after testing
+> - *documentation* - Documentation needs to be updated to reflect the new authentication methods
+> - *v1_endpoints* - V1 endpoints need to be updated to reflect the new authentication methods.
+
+
+## [Released] - 2026-03-21 by *katharsis23*
 
 ### Added
 - **Authentication Endpoints**: Implemented `/users/signup/v1` and `/users/login/v1` endpoints without Firebase integration
