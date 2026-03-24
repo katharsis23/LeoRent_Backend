@@ -95,8 +95,9 @@ class Apartment(BASE):
 
     # Foreign key with proper constraint
     owner: Mapped[PythonUUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id_", ondelete="CASCADE"), nullable=False
-    )
+        UUID(
+            as_uuid=True), ForeignKey(
+            "users.id_", ondelete="CASCADE"), nullable=False)
 
     # Relationships
     owner_user: Mapped["Users"] = relationship(
@@ -145,8 +146,9 @@ class Liked(BASE):
     )
 
     user_id: Mapped[PythonUUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id_", ondelete="CASCADE"), nullable=False
-    )
+        UUID(
+            as_uuid=True), ForeignKey(
+            "users.id_", ondelete="CASCADE"), nullable=False)
 
     apartment_id: Mapped[PythonUUID] = mapped_column(
         UUID(as_uuid=True),

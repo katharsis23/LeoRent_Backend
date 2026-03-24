@@ -22,14 +22,13 @@ class BackblazeService:
             region_name="eu-central-003",
         )
         self.bucket_name = BACKBLAZE_CONFIG.bucket_name
-    
-    
+
     async def upload_photo_from_url(self, photo_url: str, s3_key: str):
         # 1. Скачити фото
         async with httpx.AsyncClient(verify=False) as client:
             response = await client.get(photo_url)
             photo_bytes = response.content
-        
+
         # 2. Завантажити в S3 (без блокування event loop)
         await asyncio.to_thread(
             self.s3_client.put_object,
@@ -38,30 +37,33 @@ class BackblazeService:
             Body=photo_bytes,
             ContentType="image/jpeg"
         )
-        
+
         # 3. Повернути URL
         return self._get_photo_url(s3_key)
-    
+
     async def download_photo(self, s3_key: str) -> Optional[bytes]:
         """Скачати фото з Backblaze"""
         try:
             logger.info(f"Скачування фото: {s3_key}")
-            
+
             # Отримати об'єкт з S3 (без блокування event loop)
             response = await asyncio.to_thread(
                 self.s3_client.get_object,
                 Bucket=self.bucket_name,
                 Key=s3_key
             )
-            
+
             photo_bytes = response["Body"].read()
-            logger.info(f"Фото успішно скачано: {s3_key}, розмір: {len(photo_bytes)} байт")
-            
+            logger.info(
+                f"Фото успішно скачано: {s3_key}, розмір: {
+                    len(photo_bytes)} байт")
+
             return photo_bytes
-            
+
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "Unknown")
-            logger.warning(f"Фото не знайдено: {s3_key}, помилка: {error_code}")
+            logger.warning(
+                f"Фото не знайдено: {s3_key}, помилка: {error_code}")
             if error_code == "NoSuchKey":
                 return None
             else:
@@ -70,7 +72,7 @@ class BackblazeService:
         except Exception as e:
             logger.error(f"Невідома помилка при скачуванні {s3_key}: {e}")
             return None
-    
+
     async def delete_photo(self, s3_key: str) -> bool:
         """Повністю видалити фото з Backblaze (всі версії + delete markers)"""
         try:
@@ -120,7 +122,6 @@ class BackblazeService:
         except Exception as e:
             logger.error(f"Невідома помилка при видаленні: {e}")
             return False
-
 
     async def upload_photo_from_bytes(
         self,

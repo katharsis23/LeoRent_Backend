@@ -6,6 +6,7 @@ from io import BytesIO
 
 photo_router = APIRouter(prefix="/photos", tags=["photos"])
 
+
 @photo_router.post("/upload-from-url", response_model=UploadPhotoResponse)
 async def upload_photo_from_url(request: UploadPhotoRequest):
     try:
@@ -15,7 +16,8 @@ async def upload_photo_from_url(request: UploadPhotoRequest):
         )
         return UploadPhotoResponse(success=True, public_url=url)
     except Exception as e:
-        return UploadPhotoResponse(success=False, public_url=None, error=str(e))
+        return UploadPhotoResponse(
+            success=False, public_url=None, error=str(e))
 
 
 @photo_router.post("/upload-from-file", response_model=UploadPhotoResponse)
@@ -36,21 +38,22 @@ async def upload_photo_from_file(
 
         return UploadPhotoResponse(success=True, public_url=url)
     except Exception as e:
-        return UploadPhotoResponse(success=False, public_url=None, error=str(e))
+        return UploadPhotoResponse(
+            success=False, public_url=None, error=str(e))
 
 
 @photo_router.get("/download/{file_key:path}")
 async def download_photo(file_key: str):
     """Скачати фото з Backblaze"""
     from loguru import logger
-    
+
     logger.info(f"Запит на скачування: {file_key}")
     photo_bytes = await backblaze_service.download_photo(file_key)
-    
+
     if photo_bytes is None:
         logger.warning(f"Фото не знайдено: {file_key}")
         raise HTTPException(status_code=404, detail="Фото не знайдено")
-    
+
     logger.info(f"Повертаю фото: {file_key}, розмір: {len(photo_bytes)} байт")
     return StreamingResponse(
         BytesIO(photo_bytes),
@@ -63,10 +66,10 @@ async def download_photo(file_key: str):
 async def delete_photo(file_key: str):
     """Видалити фото з Backblaze"""
     success = await backblaze_service.delete_photo(file_key)
-    
+
     if not success:
         raise HTTPException(status_code=500, detail="Не вдалось видалити фото")
-    
+
     return {
         "success": True,
         "message": f"Фото успішно видалено: {file_key}"

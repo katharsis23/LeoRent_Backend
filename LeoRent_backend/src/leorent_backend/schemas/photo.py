@@ -1,8 +1,10 @@
 from pydantic import BaseModel, HttpUrl
 
+
 class UploadPhotoRequest(BaseModel):
     photo_url: HttpUrl  # URL для скачування
     file_key: str       # Ключ для збереження (папка/назва)
+
 
 class UploadPhotoResponse(BaseModel):
     success: bool
