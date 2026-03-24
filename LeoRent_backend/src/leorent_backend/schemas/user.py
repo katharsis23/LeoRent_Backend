@@ -15,7 +15,8 @@ class CreateUser(BaseModel):
     def validate_phone(cls, v: str) -> str:
         # Basic regex for phone: + and 7-15 digits
         if not re.match(r"^\+\d{7,15}$", v):
-            raise ValueError("Phone number must start with + and contain 7-15 digits")
+            raise ValueError(
+                "Phone number must start with + and contain 7-15 digits")
         return v
 
 

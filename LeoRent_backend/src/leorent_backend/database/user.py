@@ -61,7 +61,8 @@ async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
             return None
 
         if not bcrypt.checkpw(
-            user.password.encode("utf-8"), existing_user.password.encode("utf-8")
+            user.password.encode(
+                "utf-8"), existing_user.password.encode("utf-8")
         ):
             return None
         return existing_user

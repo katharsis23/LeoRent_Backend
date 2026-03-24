@@ -26,19 +26,23 @@ class Users(BASE):
         UUID(as_uuid=True), primary_key=True, default=uuid4
     )
 
-    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    username: Mapped[str] = mapped_column(
+        String(50), nullable=False, unique=True)
 
     password: Mapped[str] = mapped_column(String(255), nullable=True)
 
-    email: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(
+        String(100), nullable=False, unique=True)
 
     type_: Mapped[UserType] = mapped_column(
         ENUM(UserType), nullable=False, default=UserType.DEFAULT
     )
 
-    phone_number: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
+    phone_number: Mapped[str] = mapped_column(
+        String(20), nullable=False, unique=True)
 
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False)
 
     # Relationships
     apartments: Mapped[List["Apartment"]] = relationship(
@@ -79,9 +83,11 @@ class Apartment(BASE):
 
     floor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    floor_in_house: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    floor_in_house: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0)
 
-    details: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    details: Mapped[Optional[Dict[str, Any]]
+                    ] = mapped_column(JSON, nullable=True)
 
     type_: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -93,7 +99,8 @@ class Apartment(BASE):
     )
 
     # Relationships
-    owner_user: Mapped["Users"] = relationship("Users", back_populates="apartments")
+    owner_user: Mapped["Users"] = relationship(
+        "Users", back_populates="apartments")
 
     pictures: Mapped[List["Pictures"]] = relationship(
         "Pictures", back_populates="apartment", cascade="all, delete-orphan"
@@ -121,7 +128,8 @@ class Pictures(BASE):
 
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    metadata_: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    metadata_: Mapped[Optional[Dict[str, Any]]
+                      ] = mapped_column(JSON, nullable=True)
 
     # Relationships
     apartment: Mapped["Apartment"] = relationship(
@@ -147,7 +155,8 @@ class Liked(BASE):
     )
 
     # Relationships
-    user: Mapped["Users"] = relationship("Users", back_populates="liked_apartments")
+    user: Mapped["Users"] = relationship(
+        "Users", back_populates="liked_apartments")
 
     apartment: Mapped["Apartment"] = relationship(
         "Apartment", back_populates="liked_by"
