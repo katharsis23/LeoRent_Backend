@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from contextlib import asynccontextmanager
+
 # Routers
 from src.leorent_backend.routers.healthcheck import healthcheck_router
 from src.leorent_backend.database_connector import BASE, engine
 from src.leorent_backend.routers.user import user_router
 from src.leorent_backend.routers.photos import photo_router
 
-# Change in the future with table metadata adding
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

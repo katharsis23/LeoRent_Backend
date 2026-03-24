@@ -16,15 +16,16 @@ class HealthCheck:
     def __init__(self, request: Request):
         self.request = request
 
-    @healthcheck_router.get(path="/",
-                            response_class=JSONResponse,
-                            description="""
+    @healthcheck_router.get(
+        path="/",
+        response_class=JSONResponse,
+        description="""
                             Healthcheck base router for administration.
                             Returns the status of the server.
                             200 if Server is running
                             500 if Server is not running
-                            """
-                            )
+                            """,
+    )
     async def healthcheck(self):
         try:
             return JSONResponse(
@@ -40,15 +41,16 @@ class HealthCheck:
                 detail=str(e),
             )
 
-    @healthcheck_router.get(path="/db",
-                            response_class=JSONResponse,
-                            description="""
+    @healthcheck_router.get(
+        path="/db",
+        response_class=JSONResponse,
+        description="""
                             Healthcheck base router for administration.
                             Returns the status of the server.
                             200 if Server is running
                             500 if Server is not running
-                            """
-                            )
+                            """,
+    )
     async def healthcheck_db(self):
         try:
             await test_connection()
