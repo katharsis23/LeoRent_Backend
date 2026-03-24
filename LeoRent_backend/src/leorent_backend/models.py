@@ -28,15 +28,15 @@ class Users(BASE):
         default=uuid4
     )
 
-    username: Mapped[str] = mapped_column(
+    username: Mapped[Optional[str]] = mapped_column(
         String(50),
         nullable=True,
         unique=True
     )
 
-    password: Mapped[str] = mapped_column(
+    password: Mapped[Optional[str]] = mapped_column(
         String(255),
-        nullable=False
+        nullable=True
     )
 
     email: Mapped[str] = mapped_column(
@@ -51,9 +51,9 @@ class Users(BASE):
         default=UserType.DEFAULT
     )
 
-    phone_number: Mapped[str] = mapped_column(
+    phone_number: Mapped[Optional[str]] = mapped_column(
         String(20),
-        nullable=False,
+        nullable=True,
         unique=True
     )
 
