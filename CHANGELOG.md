@@ -9,12 +9,22 @@ All notable changes to this project will be documented in this file.
   - Password hashing using `bcrypt`
   - Duplicate field validation (email, username, phone)
   - Proper error handling with appropriate HTTP status codes
+
+- **Backblaze Photo Storage**:
+  - Added Backblaze B2 S3 configuration via environment variables
+  - Added `BackblazeService` for working with photo uploads, downloads, and deletion
+  - Added photo upload endpoint from external URL: `/photos/upload-from-url`
+  - Added photo upload endpoint from local file: `/photos/upload-from-file`
+  - Added photo download endpoint: `/photos/download/{file_key}`
+  - Added photo delete endpoint: `/photos/delete/{file_key}`
+  - Added photo response schemas for upload and delete operations
   
 - **Testing Infrastructure**:
   - Added `pytest-asyncio` dependency for async test support
   - Created `tests/conftest.py` with `client` fixture for FastAPI TestClient
   - Configured `pyproject.toml` with pytest-asyncio settings
   - Added authentication tests in `tests/test_auth.py`
+  - Added photo API and service tests in `tests/test_photos.py`
 
 - **Database Layer**:
   - Created `database_connector.py` to replace the old `database.py` module
@@ -28,6 +38,11 @@ All notable changes to this project will be documented in this file.
 - **Import Structure**: Fixed import paths across the codebase
   - Changed `from leorent_backend...` to `from src.leorent_backend...` for consistency
   - Updated `PYTHONPATH` in Dockerfile from `/app/src` to `/app`
+
+- **Photo Handling**:
+  - Moved Backblaze operations to async-compatible service calls using `asyncio.to_thread()` for boto3 requests
+  - Added multipart file upload support for local image uploads
+  - Added structured JSON responses for photo deletion
   
 - **Router Responses**: Updated user router to return consistent field names
   - Changed `name` to `username` in JSON responses
@@ -42,6 +57,7 @@ All notable changes to this project will be documented in this file.
 - **Password Storage**: Fixed bcrypt hash storage - now properly decodes bytes to string before storing in database
 - **Login Validation**: Fixed login to properly check bcrypt result (was not checking password validity)
 - **Database Field Names**: Aligned model field names with schema fields (`phone_number` in model vs `phone` in schema)
+- **Photo Endpoint Coverage**: Added test coverage for upload, download, delete, nested paths, and filenames with spaces
 
 ### Removed
 - **Firebase Integration**: Temporarily removed Firebase authentication (will be re-added in future)
