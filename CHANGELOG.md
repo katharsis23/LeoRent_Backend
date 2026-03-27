@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [UnReleased] - 2026-03-27 by *nazar* & *katharsis23*
+
+### Added
+- **Rate Limiting Middleware**: Request throttling with Redis and in-memory fallback
+  - Rate limit: 2 requests per 60 seconds per IP address
+  - Redis integration for distributed rate limiting
+  - In-memory fallback when Redis is temporarily unavailable
+  - Returns HTTP 429 (Too Many Requests) when limit exceeded
+  - Graceful degradation: if Redis unavailable, uses local memory tracking with TTL
+
+- **Redis Integration**:
+  - Added `redis` (>=5.0.0,<6.0.0) as project dependency
+  - Created standalone `RedisSettings` configuration module in `redis_client.py`
+  - Decoupled from global config to prevent cascade validation failures
+  - Default fallback URL: `redis://localhost:6379/0` (configurable via `REDIS_URL` env var)
+
+### Fixed
+- **Configuration Loading**: Fixed cascade validation errors on startup
+  - Moved Redis configuration to separate module to prevent unrelated JWT/SMTP/S3 validation failures
+  - BaseHTTPMiddleware now properly returns JSONResponse instead of raising HTTPException for rate limit responses
+  - Logging middleware now captures all HTTP requests/responses with timing information
+
+### Changed
+- **Dependency Management**: Updated `poetry.lock` to include new redis dependencies
+- **Error Handling**: Rate limiter now fails gracefully with in-memory fallback instead of returning 500 errors
+
+### Technical Details
+- **Rate Limiting Logic**:
+  - Redis key format: `rate_limit:{client_ip}`
+  - TTL per window: 60 seconds
+  - In-memory dict tracks: `{key: (request_count, window_start_time)}`
+  - Window reset: when current_time >= (start_time + window_duration)
+
+- **Middleware Stack Order** (innermost to outermost):
+  1. LoggingMiddleware - captures all requests/responses
+  2. ErrorHandlingMiddleware - centralized error handling
+  3. RateLimitMiddleware - enforces rate limits
+  4. CORSMiddleware - handles CORS headers
+
 ## [UnReleased] - 2026-03-23 by *katharsis23*
 
 ### Added
