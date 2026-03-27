@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from contextlib import asynccontextmanager
 
-#Middlewares
+# Middlewares
 from src.leorent_backend.middleware.logging import LoggingMiddleware, ErrorHandlingMiddleware
 from src.leorent_backend.middleware.rate_limiter import RateLimitMiddleware
 from src.leorent_backend.redis_client import redis_client

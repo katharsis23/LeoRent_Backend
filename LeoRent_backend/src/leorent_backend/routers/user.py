@@ -85,7 +85,8 @@ class UserRouter:
     Supports Email/Password and Google providers
     Accepts Firebase ID token and returns user information
     """)
-    async def firebase_auth(self, request: FirebaseAuthRequest) -> JSONResponse:
+    async def firebase_auth(
+            self, request: FirebaseAuthRequest) -> JSONResponse:
         try:
             # Create a temporary credentials object from the token
             from fastapi.security import HTTPAuthorizationCredentials
