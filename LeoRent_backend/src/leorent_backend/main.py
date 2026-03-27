@@ -3,6 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from contextlib import asynccontextmanager
 
+#Middlewares
+from src.leorent_backend.middleware.logging import LoggingMiddleware, ErrorHandlingMiddleware
+from src.leorent_backend.middleware.rate_limiter import RateLimitMiddleware
+from src.leorent_backend.redis_client import redis_client
+
 # Routers
 from src.leorent_backend.routers.healthcheck import healthcheck_router
 from src.leorent_backend.database_connector import BASE, engine
@@ -38,6 +43,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+# Middleware
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(
+    RateLimitMiddleware,
+    redis_client=redis_client,
+    limit=30,
+    window=60
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
