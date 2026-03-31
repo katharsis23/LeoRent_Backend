@@ -1,10 +1,10 @@
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Any
+from uuid import UUID
 
 
 # ==== ALLOWED CONSTANTS
 
-# TODO: Define allowed constants
 ALLOWED_RENT_TYPES = ['DEFAULT', 'DAILY']
 ALLOWED_TYPES = [
     "panel",
@@ -117,3 +117,76 @@ class ApartmentUpdate(BaseModel):
     renovation_type: Optional[str] = None
 
     # TODO: Add validation for update fields
+
+
+# ========= Response Schemas =========
+
+
+# ======== FULL Schema ========
+
+class ApartmentFullInfoResponse(BaseModel):
+    id_: UUID
+    title: str
+    description: Optional[str] = None
+    location: str
+    district: str
+    cost: int
+    rent_type: str
+    rooms: int
+    square: float
+    floor: int
+    floor_in_house: int
+    details: Optional[Dict[str, Any]] = None
+    type_: str
+    renovation_type: str
+    owner_type: str
+    owner_info: Dict[str, Any]
+
+
+class ApartmentResponse(BaseModel):
+    id_: UUID
+    title: str
+    description: Optional[str] = None
+    location: str
+    district: str
+    cost: int
+    rent_type: str
+    is_deleted: bool = False
+    rooms: int
+    square: float
+    floor: int
+    floor_in_house: int
+    details: Optional[Dict[str, Any]] = None
+    type_: str
+    renovation_type: str
+    owner: UUID
+
+
+class ApartmentListResponse(BaseModel):
+    apartments: list[ApartmentResponse]
+
+
+class ApartmentPreviewResponse(BaseModel):
+    id_: UUID
+    title: str
+    cost: int
+    rent_type: str
+    rooms: int
+    square: float
+    floor: int
+    floor_in_house: int
+    type_: str
+    renovation_type: str
+    location: str
+    district: str
+    owner_type: str
+    is_liked_by_current_user: bool = False
+
+
+class ApartmentPreviewListResponse(BaseModel):
+    apartments: list[ApartmentPreviewResponse]
+
+
+class ApartmentLikeResponse(BaseModel):
+    message: str
+    status: str

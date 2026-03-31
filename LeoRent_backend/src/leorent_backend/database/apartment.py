@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import HTTPException
 import src.leorent_backend.schemas.apartment as apartment_schemas
 import src.leorent_backend.database.user as user_db
-from typing import Optional
+from typing import Optional, List
 
 
 async def get_apartments(db: AsyncSession, current_page: int = 1, page_size: int = 10):
@@ -158,4 +158,123 @@ async def delete_apartment(
         return True
     except Exception as e:
         logger.error(f"Error deleting apartment: {e}")
+        raise e
+
+
+async def get_apartments_by_user(
+    db: AsyncSession,
+    user_id: UUID,
+    current_page: int = 1,
+    page_size: int = 10
+) -> List[Apartment]:
+    try:
+        query = select(Apartment).where(Apartment.owner == user_id)
+        result = await db.execute(
+            query
+            .offset((current_page - 1) * page_size)
+            .limit(page_size)
+        )
+        return result.scalars().all()
+    except Exception as e:
+        logger.error(f"Error getting apartments by user: {e}")
+        raise e
+
+
+async def get_liked_apartments_by_user(
+    db: AsyncSession,
+    user_id: UUID
+) -> List[Apartment]:
+    try:
+        query = select(Liked.apartment_id).where(Liked.user_id == user_id)
+        result = await db.execute(query)
+        apartment_ids = result.scalars().all()
+
+        if not apartment_ids:
+            return []
+
+        query = select(Apartment).where(Apartment.id_.in_(apartment_ids))
+        result = await db.execute(query)
+        return result.scalars().all()
+    except Exception as e:
+        logger.error(f"Error getting liked apartments by user: {e}")
+        raise e
+
+
+async def toggle_like_apartment(
+    db: AsyncSession,
+    apartment_id: UUID,
+    user_id: UUID
+) -> dict:
+    """
+    Toggle like status for an apartment.
+    Returns dict with action taken and apartment_id.
+    """
+    try:
+        # Check if apartment exists and is not deleted
+        apartment_result = await db.execute(
+            select(Apartment)
+            .where(Apartment.id_ == apartment_id)
+            .where(Apartment.is_deleted == False)   # noqa: E712
+        )
+        apartment = apartment_result.scalar_one_or_none()
+
+        if not apartment:
+            return {"error": "Apartment not found or deleted"}
+
+        # Check if already liked
+        result = await db.execute(
+            select(Liked)
+            .where(Liked.apartment_id == apartment_id)
+            .where(Liked.user_id == user_id)
+        )
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            # Unlike - remove the like
+            await db.delete(existing)
+            await db.commit()
+            return {
+                "action": "unliked",
+                "apartment_id": str(apartment_id),
+                "message": "Apartment unliked successfully"
+            }
+        else:
+            # Like - add new like
+            like = Liked(apartment_id=apartment_id, user_id=user_id)
+            db.add(like)
+            await db.commit()
+            return {
+                "action": "liked",
+                "apartment_id": str(apartment_id),
+                "message": "Apartment liked successfully"
+            }
+    except Exception as e:
+        logger.error(f"Error toggling like for apartment: {e}")
+        raise e
+
+
+async def like_apartment(
+    db: AsyncSession,
+    apartment_id: UUID,
+    user_id: UUID
+) -> Optional[Apartment]:
+    try:
+        # Check if already liked
+        result = await db.execute(
+            select(Liked)
+            .where(Liked.apartment_id == apartment_id)
+            .where(Liked.user_id == user_id)
+        )
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            return None  # Already liked
+
+        # Create new like
+        like = Liked(apartment_id=apartment_id, user_id=user_id)
+        db.add(like)
+        await db.commit()
+        return like.apartment_id
+    except Exception as e:
+        logger.error(f"Error liking apartment: {e}")
         raise e

@@ -24,7 +24,8 @@ class ApartmentController:
 
     @apartment_router.get(
         path="/",
-        description="Get actual apartments with pagination given as query parameters"
+        description="Get actual apartments with pagination given as query parameters",
+        response_model=apartment_schemas.ApartmentPreviewListResponse
     )
     async def get_apartments(
         self, current_page: int = 1, page_size: int = 10
@@ -40,24 +41,33 @@ class ApartmentController:
                     self.db, apartment.id_, self.user_.id_
                 )
 
-                apartments_with_like_status.append({
-                    "id_": str(apartment.id_),
-                    "title": apartment.title,
-                    "cost": apartment.cost,
-                    "square": apartment.square,
-                    "floor": apartment.floor,
-                    "rooms": apartment.rooms,
-                    "floor_in_house": apartment.floor_in_house,
-                    "location": apartment.location,
-                    "district": apartment.district,
-                    "owner_type": str(await apartment_db.get_user_type_from_apartment(
-                        self.db, apartment.id_
-                    )),
-                    "is_liked_by_current_user": is_liked
-                })
+                owner_type = await apartment_db.get_user_type_from_apartment(
+                    self.db, apartment.id_
+                )
+
+                apartments_with_like_status.append(
+                    apartment_schemas.ApartmentPreviewResponse(
+                        id_=apartment.id_,
+                        title=apartment.title,
+                        cost=apartment.cost,
+                        rooms=apartment.rooms,
+                        square=apartment.square,
+                        floor=apartment.floor,
+                        floor_in_house=apartment.floor_in_house,
+                        rent_type=apartment.rent_type.value,
+                        type_=apartment.type_,
+                        renovation_type=apartment.renovation_type,
+                        location=apartment.location,
+                        district=apartment.district,
+                        owner_type=str(owner_type),
+                        is_liked_by_current_user=is_liked
+                    )
+                )
 
             return JSONResponse(
-                content=apartments_with_like_status,
+                content=apartment_schemas.ApartmentPreviewListResponse(
+                    apartments=apartments_with_like_status
+                ).model_dump(mode="json"),
                 status_code=status.HTTP_200_OK
             )
         except HTTPException as http_error:
@@ -113,29 +123,31 @@ class ApartmentController:
             }
 
             return JSONResponse(
-                content={
-                    "id_": str(apartment.id_),
-                    "title": apartment.title,
-                    "cost": apartment.cost,
-                    "square": apartment.square,
-                    "floor": apartment.floor,
-                    "rooms": apartment.rooms,
-                    "floor_in_house": apartment.floor_in_house,
-                    "location": apartment.location,
-                    "district": apartment.district,
-                    "description": apartment.description,
-                    "details": apartment.details,
-                    "rent_type": apartment.rent_type.value,
-                    "type_": apartment.type_,
-                    "renovation_type": apartment.renovation_type,
-                    "owner": owner_info
-                },
+                content=apartment_schemas.ApartmentFullInfoResponse(
+                    id_=apartment.id_,
+                    title=apartment.title,
+                    description=apartment.description,
+                    location=apartment.location,
+                    district=apartment.district,
+                    cost=apartment.cost,
+                    rent_type=apartment.rent_type.value,
+                    rooms=apartment.rooms,
+                    square=apartment.square,
+                    floor=apartment.floor,
+                    floor_in_house=apartment.floor_in_house,
+                    details=apartment.details,
+                    type_=apartment.type_,
+                    renovation_type=apartment.renovation_type,
+                    owner_type=str(apartment.owner_user.type_.value),
+                    owner_info=owner_info
+                ).model_dump(mode="json"),
                 status_code=status.HTTP_200_OK
             )
         except HTTPException as http_error:
             logger.error(f"HTTPException: {http_error}")
             raise http_error
 
+    # IMPROVE:  Return Apartment info instead of id_
     @apartment_router.put(
         path="/{apartment_id}",
         description="Update an existing apartment"
@@ -185,3 +197,131 @@ class ApartmentController:
         except HTTPException as http_error:
             logger.error(f"HTTPException: {http_error}")
             raise http_error
+
+    @apartment_router.get(
+        path="/my/",
+        description="""
+        Get apartments for current user if its Agent or Owner
+        Returns in pagination
+        """,
+        response_model=apartment_schemas.ApartmentListResponse
+    )
+    async def get_my_apartments(
+        self, current_page: int = 1, page_size: int = 10
+    ):
+        try:
+            apartments = await apartment_db.get_apartments_by_user(
+                self.db, self.user_.id_, current_page, page_size
+            )
+
+            # Use Pydantic schema for serialization
+            serialized_apartments = [
+                apartment_schemas.ApartmentResponse(
+                    id_=apartment.id_,
+                    title=apartment.title,
+                    description=apartment.description,
+                    location=apartment.location,
+                    district=apartment.district,
+                    cost=apartment.cost,
+                    rent_type=apartment.rent_type.value,
+                    is_deleted=apartment.is_deleted,
+                    rooms=apartment.rooms,
+                    square=apartment.square,
+                    floor=apartment.floor,
+                    floor_in_house=apartment.floor_in_house,
+                    details=apartment.details,
+                    type_=apartment.type_,
+                    renovation_type=apartment.renovation_type,
+                    owner=apartment.owner
+                ) for apartment in apartments
+            ]
+
+            return JSONResponse(
+                content=apartment_schemas.ApartmentListResponse(
+                    apartments=serialized_apartments
+                ).model_dump(mode="json"),
+                status_code=status.HTTP_200_OK
+            )
+        except HTTPException as http_error:
+            logger.error(f"HTTPException: {http_error}")
+            raise http_error
+
+    @apartment_router.post(
+        path="/{apartment_id}/like",
+        description="Toggle like/unlike for an apartment",
+        response_model=apartment_schemas.ApartmentLikeResponse
+    )
+    async def toggle_like_apartment(self, apartment_id: UUID):
+        try:
+            result = await apartment_db.toggle_like_apartment(
+                self.db, apartment_id, self.user_.id_
+            )
+
+            if "error" in result:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=result["error"]
+                )
+
+            return JSONResponse(
+                content=apartment_schemas.ApartmentLikeResponse(
+                    message=result["message"],
+                    status=result["action"]
+                ).model_dump(mode="json"),
+                status_code=status.HTTP_200_OK
+            )
+        except HTTPException as http_error:
+            logger.error(f"HTTPException: {http_error}")
+            raise http_error
+        except Exception as e:
+            logger.error(f"Error toggling like for apartment: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error toggling like for apartment"
+            )
+
+    @apartment_router.get(
+        path="/liked/",
+        description="Get liked apartments",
+        response_model=apartment_schemas.ApartmentListResponse
+    )
+    async def get_liked_apartments(self):
+        try:
+            liked_apartments = await apartment_db.get_liked_apartments_by_user(
+                self.db, self.user_.id_
+            )
+
+            # Use Pydantic schema for serialization
+            serialized_apartments = [
+                apartment_schemas.ApartmentResponse(
+                    id_=apartment.id_,
+                    title=apartment.title,
+                    description=apartment.description,
+                    location=apartment.location,
+                    district=apartment.district,
+                    cost=apartment.cost,
+                    rent_type=apartment.rent_type.value,
+                    is_deleted=apartment.is_deleted,
+                    rooms=apartment.rooms,
+                    square=apartment.square,
+                    floor=apartment.floor,
+                    floor_in_house=apartment.floor_in_house,
+                    details=apartment.details,
+                    type_=apartment.type_,
+                    renovation_type=apartment.renovation_type,
+                    owner=apartment.owner
+                ) for apartment in liked_apartments
+            ]
+
+            return JSONResponse(
+                content=apartment_schemas.ApartmentListResponse(
+                    apartments=serialized_apartments
+                ).model_dump(mode="json"),
+                status_code=status.HTTP_200_OK
+            )
+        except Exception as e:
+            logger.error(f"Error getting liked apartments: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error getting liked apartments"
+            )
