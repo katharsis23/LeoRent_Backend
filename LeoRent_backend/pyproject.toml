@@ -47,7 +47,7 @@ dev = [
 
 
 [tool.flake8]
-extend-ignore = ["E501", "F401", "F403", "B008"]
+extend-ignore = ["E501", "F401", "F403", "B008", "C901"]
 
 exclude = [
     ".git",

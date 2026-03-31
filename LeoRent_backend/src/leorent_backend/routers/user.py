@@ -21,10 +21,13 @@ user_router = APIRouter(
 class UserRouter:
     db: AsyncSession = Depends(get_db)
 
-    @user_router.post(path="/signup/v1", description="""
+    @user_router.post(
+        path="/signup/v1",
+        description="""
     Version 1 of the signup endpoint. Easy stub and may be insecure
     Does not support firebase authentication
-    """)
+    """,
+    )
     async def create_user(self, user: CreateUser):
         try:
             new_user = await create_user(db=self.db, user=user)
@@ -41,6 +44,8 @@ class UserRouter:
                     "id": str(new_user.id_),
                     "email": new_user.email,
                     "username": new_user.username,
+                    "first_name": new_user.first_name,
+                    "last_name": new_user.last_name,
                     "phone": new_user.phone_number,
                     "user_type": new_user.type_.value,
                 }
@@ -51,10 +56,13 @@ class UserRouter:
                 detail=str(e)
             )
 
-    @user_router.post(path="/login/v1", description="""
+    @user_router.post(
+        path="/login/v1",
+        description="""
     Version 1 of the login endpoint. Easy stub and may be insecure
     Does not support firebase authentication
-    """)
+    """,
+    )
     async def login_user(self, user: LoginUser):
         try:
             existing_user = await login_user(db=self.db, user=user)
@@ -82,7 +90,7 @@ class UserRouter:
     @user_router.post(path="/firebase-auth/v1", description="""
     Firebase authentication endpoint v1
     Supports Email/Password and Google providers
-    Accepts Firebase ID token and returns user information
+    Accepts Firebase ID token and profile data, returns user information
     """)
     async def firebase_auth(self, request: FirebaseAuthRequest) -> JSONResponse:
         try:
@@ -94,7 +102,14 @@ class UserRouter:
             )
 
             # Use get_current_user to authenticate and get/create user
-            user = await get_current_user(credentials=credentials, db=self.db)
+            user = await get_current_user(
+                credentials=credentials,
+                db=self.db,
+                first_name=request.first_name,
+                last_name=request.last_name,
+                phone=request.phone,
+                user_type=request.user_type
+            )
 
             if not user:
                 return JSONResponse(
@@ -110,7 +125,8 @@ class UserRouter:
                 content={
                     "id": str(user.id_),
                     "email": user.email,
-                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
                     "phone_number": user.phone_number,
                     "user_type": user.type_.value,
                     "firebase_uid": user.firebase_uid,

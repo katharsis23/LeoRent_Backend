@@ -13,10 +13,19 @@ def email_validation(v: str) -> str:
 class CreateUser(BaseModel):
     email: str
     username: str = Field(..., min_length=3, max_length=50)
-    phone: str = Field(..., description="Phone number with country code")
+    first_name: Optional[str] = Field(None, max_length=50)
+    last_name: Optional[str] = Field(None, max_length=50)
+    phone: str = Field(..., description="Phone number with country code, e.g. +380...")
     password: str = Field(..., min_length=8)
     # TODO: Double check validity of user_type
     user_type: UserType = UserType.DEFAULT
+
+    @field_validator("user_type", mode="before")
+    @classmethod
+    def validate_user_type_enum(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
     @field_validator("phone")
     @classmethod
@@ -40,17 +49,3 @@ class LoginUser(BaseModel):
     @classmethod
     def validate_email(cls, v: str) -> str:
         return email_validation(v)
-
-
-class FirebaseAuthRequest(BaseModel):
-    id_token: str = Field(..., description="Firebase ID token")
-
-
-class FirebaseUserResponse(BaseModel):
-    id: str
-    email: str
-    username: str
-    phone_number: Optional[str]
-    user_type: str
-    firebase_uid: Optional[str]
-    is_verified: bool
