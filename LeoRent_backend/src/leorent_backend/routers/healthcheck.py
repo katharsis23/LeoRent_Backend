@@ -55,7 +55,7 @@ class HealthCheck:
                             200 if Server is running
                             500 if Server is not running
                             """
-                            )
+    )
     async def healthcheck_db(self, db: AsyncSession = Depends(get_db)):
         try:
             await test_connection()

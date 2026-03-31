@@ -22,7 +22,8 @@ class FirebaseAuthRouter:
     Firebase-based user signup/registration.
     Creates or updates user from Firebase token.
     """)
-    async def firebase_signup(self, current_user: Users = Depends(get_current_user)):
+    async def firebase_signup(
+            self, current_user: Users = Depends(get_current_user)):
         try:
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
@@ -50,7 +51,8 @@ class FirebaseAuthRouter:
     @firebase_router.get(path="/me", description="""
     Get current authenticated user profile from Firebase token.
     """)
-    async def get_profile(self, current_user: Users = Depends(get_current_user)):
+    async def get_profile(
+            self, current_user: Users = Depends(get_current_user)):
         try:
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
