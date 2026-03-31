@@ -15,8 +15,8 @@ class UserType(Enum):
 
 
 class RentType(Enum):
-    DEFAULT = "default"
-    DAILY = "daily"
+    DEFAULT = "DEFAULT"
+    DAILY = "DAILY"
 
 
 class Users(BASE):

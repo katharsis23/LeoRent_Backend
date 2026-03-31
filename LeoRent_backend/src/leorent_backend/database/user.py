@@ -14,7 +14,7 @@ from loguru import logger
 
 async def find_user_by_id(user: UUID, db: AsyncSession) -> Optional[Users]:
     try:
-        query = await db.execute(select(Users).where(Users.id == user))
+        query = await db.execute(select(Users).where(Users.id_ == user))
         return query.scalar_one_or_none()
     except SQLAlchemyError as e:
         logger.error(f"Error finding user by id: {e}")
