@@ -22,8 +22,8 @@ class UserRouter:
     @user_router.post(
         path="/signup/v1",
         description="""
-    DEPRECATED: Version 1 of the signup endpoint.
-    Does not support firebase authentication.
+    Version 1 of the signup endpoint. Easy stub and may be insecure
+    Does not support firebase authentication
     """,
     )
     async def create_user(self, user: CreateUser):
@@ -55,8 +55,8 @@ class UserRouter:
     @user_router.post(
         path="/login/v1",
         description="""
-    DEPRECATED: Version 1 of the login endpoint.
-    Does not support firebase authentication.
+    Version 1 of the login endpoint. Easy stub and may be insecure
+    Does not support firebase authentication
     """,
     )
     async def login_user(self, user: LoginUser):
