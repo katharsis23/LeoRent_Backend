@@ -228,3 +228,7 @@ alembic.ini
 
 # Firebase test
 firebase_test.html
+
+# md files
+
+test*.md
