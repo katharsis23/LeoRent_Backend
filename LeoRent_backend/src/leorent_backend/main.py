@@ -48,12 +48,6 @@ app = FastAPI(
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(ErrorHandlingMiddleware)
 app.add_middleware(
-    RateLimitMiddleware,
-    redis_client=redis_client,
-    limit=30,
-    window=60
-)
-app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,

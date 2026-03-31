@@ -4,20 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [UnReleased] - 2026-03-27 by *nazar* & *katharsis23*
 
-### Added
-- **Rate Limiting Middleware**: Request throttling with Redis and in-memory fallback
-  - Rate limit: 2 requests per 60 seconds per IP address
-  - Redis integration for distributed rate limiting
-  - In-memory fallback when Redis is temporarily unavailable
-  - Returns HTTP 429 (Too Many Requests) when limit exceeded
-  - Graceful degradation: if Redis unavailable, uses local memory tracking with TTL
-
-- **Redis Integration**:
-  - Added `redis` (>=5.0.0,<6.0.0) as project dependency
-  - Created standalone `RedisSettings` configuration module in `redis_client.py`
-  - Decoupled from global config to prevent cascade validation failures
-  - Default fallback URL: `redis://localhost:6379/0` (configurable via `REDIS_URL` env var)
-
 ### Fixed
 - **Configuration Loading**: Fixed cascade validation errors on startup
   - Moved Redis configuration to separate module to prevent unrelated JWT/SMTP/S3 validation failures
