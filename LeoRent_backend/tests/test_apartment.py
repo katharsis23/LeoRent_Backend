@@ -1,5 +1,6 @@
 import pytest
-from uuid import UUID
+import random
+from uuid import UUID as PythonUUID, UUID
 from src.leorent_backend.models import Users, UserType
 from src.leorent_backend.main import app
 from src.leorent_backend.external.firebase_auth import get_current_user
@@ -11,16 +12,16 @@ def seeded_owner(client):
     Seed an owner user via the API and return the user object.
     This is fully synchronous and ensures the user exists for ForeignKeys.
     """
-    import random
-    unique_email = f"owner_{random.randint(1000, 9999)}@example.com"
-    signup_data = {
-        "email": unique_email,
-        "username": f"user_{random.randint(1000, 9999)}",
+    user_data = {
+        "username": f"owner_{random.randint(10000, 999999)}",
+        "first_name": "Owner",
+        "last_name": "Test",
+        "password": "testpassword123",
+        "email": f"owner_{random.randint(10000, 999999)}@example.com",
         "phone": f"+38099{random.randint(1000000, 9999999)}",
-        "password": "password123",
         "user_type": "owner"
     }
-    resp = client.post("/users/signup/v1", json=signup_data)
+    resp = client.post("/users/signup/v1", json=user_data)
     assert resp.status_code == 201
     user_data = resp.json()
 
@@ -28,11 +29,43 @@ def seeded_owner(client):
     return Users(
         id_=UUID(user_data["id"]),
         email=user_data["email"],
+        type_=UserType.OWNER,
+        phone_number=user_data["phone"],
+        is_verified=False,
+        firebase_uid=None,
+        first_name=None,
+        last_name=None
+    )
+
+
+@pytest.fixture
+def seeded_user(client):
+    """
+    Seed a regular user via the API and return the user object.
+    This is fully synchronous and ensures the user exists for testing likes.
+    """
+    user_data = {
+        "username": f"user_{random.randint(10000, 999999)}",
+        "password": "testpassword123",
+        "email": f"user_{random.randint(10000, 999999)}@example.com",
+        "phone": f"+38099{random.randint(1000000, 9999999)}",
+        "user_type": "agent"
+    }
+
+    # Create user
+    resp = client.post("/users/signup/v1", json=user_data)
+    assert resp.status_code == 201
+
+    # Get user object
+    user = Users(
+        id_=PythonUUID(resp.json()["id"]),
         username=user_data["username"],
         phone_number=user_data["phone"],
         type_=UserType.OWNER,
         is_verified=True
     )
+
+    return user
 
 
 @pytest.fixture

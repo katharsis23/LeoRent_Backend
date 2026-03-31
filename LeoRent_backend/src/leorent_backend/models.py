@@ -9,9 +9,9 @@ from typing import Optional, Dict, Any, List
 
 # Basic Constants(Enums)
 class UserType(Enum):
-    AGENT = "agent"
-    OWNER = "owner"
-    DEFAULT = "default"
+    AGENT = "AGENT"
+    OWNER = "OWNER"
+    DEFAULT = "DEFAULT"
 
 
 class RentType(Enum):
