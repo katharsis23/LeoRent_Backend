@@ -72,7 +72,8 @@ async def login_user(user: LoginUser, db: AsyncSession) -> Optional[Users]:
         return None
 
 
-async def find_user_by_firebase_uid(firebase_uid: str, db: AsyncSession) -> Optional[Users]:
+async def find_user_by_firebase_uid(
+        firebase_uid: str, db: AsyncSession) -> Optional[Users]:
     try:
         query = await db.execute(select(Users).where(Users.firebase_uid == firebase_uid))
         return query.scalar_one_or_none()
