@@ -1,4 +1,4 @@
-from src.leorent_backend.models import Users
+from src.leorent_backend.models import Users, UserType
 from src.leorent_backend.schemas.user import CreateUser, LoginUser
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -40,8 +40,11 @@ async def create_user(user: CreateUser, db: AsyncSession) -> Optional[Users]:
         new_user = Users(
             username=user.username,
             email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
             phone_number=user.phone,
             password=password,
+            type_=user.user_type,
         )
         db.add(new_user)
         await db.commit()
@@ -86,13 +89,14 @@ async def create_user_from_firebase(
     decoded_token: dict,
     first_name: str,
     last_name: str,
+    phone: str,
+    user_type: UserType,
     db: AsyncSession
 ) -> Optional[Users]:
     try:
         # Extract required fields from Firebase token
         firebase_uid = decoded_token.get('uid')
         email = decoded_token.get('email')
-        phone = decoded_token.get('phone')
 
         if not firebase_uid:
             logger.error("Firebase UID is required")
@@ -108,6 +112,7 @@ async def create_user_from_firebase(
             email=email,
             phone_number=phone,
             firebase_uid=firebase_uid,
+            type_=user_type,
             password=None
         )
         db.add(new_user)

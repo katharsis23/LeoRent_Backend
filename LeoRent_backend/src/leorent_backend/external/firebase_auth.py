@@ -7,7 +7,7 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.leorent_backend.database_connector import get_db
-from src.leorent_backend.models import Users
+from src.leorent_backend.models import Users, UserType
 from loguru import logger
 from typing import Optional
 
@@ -16,8 +16,12 @@ security = HTTPBearer(auto_error=False)
 
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: AsyncSession = Depends(get_db)
-) -> Users:
+    db: AsyncSession = Depends(get_db),
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    phone: Optional[str] = None,
+    user_type: Optional[UserType] = None
+) -> Users:  # noqa: C901
     """
     Get current authenticated user from Firebase token
 
@@ -62,11 +66,21 @@ async def get_current_user(
         # Find user in database
         user = await find_user_by_firebase_uid(firebase_uid, db)
         if not user:
-            # Extract user info from Firebase token
-            first_name = decoded_token.get('first_name', '')
-            last_name = decoded_token.get('last_name', '')
+            # Extract user info from Firebase token if not provided
+            if not first_name:
+                first_name = decoded_token.get('first_name') or decoded_token.get('name', '').split(' ')[0] or ''
+            if not last_name:
+                last_name = decoded_token.get('last_name') or (decoded_token.get('name', '').split(' ')[1] if ' ' in decoded_token.get('name', '') else '') or ''
+
+            # For phone and user_type, they MUST be provided if we create a user
+            if not phone:
+                phone = decoded_token.get('phone_number') or ''
+
+            if not user_type:
+                user_type = UserType.DEFAULT
+
             user = await create_user_from_firebase(
-                decoded_token, first_name, last_name, db
+                decoded_token, first_name, last_name, phone, user_type, db
             )
 
         if not user:

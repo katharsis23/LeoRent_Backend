@@ -10,9 +10,11 @@ def signup_payload():
     return {
         "email": f"test_{unique_id}@example.com",
         "username": f"user_{unique_id}",
+        "first_name": "Test",
+        "last_name": "User",
         "phone": f"+38050{unique_num:08d}",
         "password": "password123",
-        "user_type": "default",
+        "user_type": "DEFAULT",
     }
 
 
@@ -30,6 +32,8 @@ def test_signup_v1_creates_user(client, signup_payload):
     body = response.json()
     assert body["email"] == signup_payload["email"]
     assert body["username"] == signup_payload["username"]
+    assert body["first_name"] == signup_payload["first_name"]
+    assert body["last_name"] == signup_payload["last_name"]
     assert body["phone"] == signup_payload["phone"]
     assert "id" in body
 

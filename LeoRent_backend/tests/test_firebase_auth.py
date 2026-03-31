@@ -53,13 +53,25 @@ class TestFirebaseAuth:
 
         response = client.post(
             "/users/firebase-auth/v1",
-            json={"id_token": firebase_token}
+            json={
+                "id_token": firebase_token,
+                "first_name": "John",
+                "last_name": "Doe",
+                "phone": "+1234567890",
+                "user_type": "DEFAULT"
+            }
         )
+
+        if response.status_code != 200:
+            print(f"Error Response: {response.text}")
 
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == firebase_decoded_token["email"]
         assert data["firebase_uid"] == firebase_decoded_token["uid"]
+        assert data["first_name"] == "John"
+        assert data["last_name"] == "Doe"
+        assert data["user_type"] == "DEFAULT"
         assert "id" in data
 
     @patch('src.leorent_backend.external.firebase_client.firebase_app')
@@ -73,7 +85,13 @@ class TestFirebaseAuth:
 
         response = client.post(
             "/users/firebase-auth/v1",
-            json={"id_token": "invalid_token"}
+            json={
+                "id_token": "invalid_token",
+                "first_name": "X",
+                "last_name": "Y",
+                "phone": "+1234567890",
+                "user_type": "DEFAULT"
+            }
         )
 
         assert response.status_code == 401
