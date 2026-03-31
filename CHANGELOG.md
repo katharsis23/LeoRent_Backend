@@ -2,30 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
-## [UnReleased] - 2026-04-16 by *nazar*
-
-### Added
-
-- **Apartment Photo Management**: Extended apartment image workflows with Backblaze integration
-  - Apartment creation now supports `main_pictures` from direct image URLs or multipart file uploads
-  - Added batch gallery upload endpoint for apartment photos via `POST /apartment/{apartment_id}/pictures`
-  - Added metadata enrichment for uploaded photos with `room`, `format`, and `size_bytes`
-  - Apartment responses now return `main_pictures` separately from additional `pictures`
-  - Added 10 MB upload limit validation for image files
+## [Unreleased] - 2026-04-16 by *nazar*
 
 ### Fixed
 
-- **Photo Lifecycle Behavior**: Improved consistency for apartment image handling
-  - Additional gallery uploads no longer overwrite or duplicate the apartment main photo
-  - Added soft delete for single gallery photos and bulk delete for all additional photos
-  - Deleting an apartment now soft-deletes all linked picture records
+- **Apartment Photo Persistence**: Fixed apartment creation with main photos
+  - The main photo source is now validated before the apartment is saved
+  - Direct image URLs are uploaded to Backblaze B2 first and only the stored Backblaze URL is persisted in the database
+  - Multipart local file uploads are also supported for the main apartment photo
+  - Oversized uploads are rejected and image metadata is normalized
 
-- **Infrastructure & Storage**: Stabilized container and Backblaze behavior
-  - Docker Compose now loads runtime variables from `.env` instead of `.env.example`
-  - Improved Backblaze direct image URL validation and upload metadata extraction
-  - Fixed container startup dependency resolution for Gemini-related packages
+- **Apartment Preview Data**: Improved preview payload fallbacks for apartment lists
+  - `owner_type` no longer falls back to `DEFAULT` when owner type is missing
+  - `picture` now falls back to a default placeholder URL instead of `null`
 
-## [UnReleased] - 2026-03-31 by *katharsis23*
+- **AI Filter Validation**: Fixed filter schema fallback and optional field behavior
+  - `rent_type` fallback to `DEFAULT` now works correctly for invalid AI values
+  - Renovation validation now uses allowed renovation values instead of apartment type values
+  - `renovation_type` and `details` are now truly optional in `FilterApartment`
+
+### Tests
+
+- **Filter Coverage**: Added focused tests for AI filter flow and schema normalization
+  - Added `tests/test_filter.py` with endpoint tests for success and 422 validation path
+  - Added schema tests for detail-key filtering, fallback normalization, and negative value validation
+
+### Added
+
+- **Apartment Picture Management**:
+  - `POST /apartment/{apartment_id}/pictures` endpoint for adding gallery images from direct URLs or multipart files
+  - `DELETE /apartment/{apartment_id}/pictures` endpoint for soft-deleting all apartment pictures
+  - `DELETE /apartment/{apartment_id}/pictures/{picture_id}` endpoint for soft-deleting a single picture
+  - Automatic picture metadata enrichment for format and file size
+
+- **AI Search**:
+  - Added `/filter/ai-search` endpoint backed by Gemini for natural-language apartment filtering
+
+### Changed
+
+- **Authentication Payloads**: Extended signup and Firebase auth flows to store `first_name`, `last_name`, `phone`, and explicit user type
+- **Dependencies**: Added Gemini SDK support and aligned project configuration for the new flow
+
+## [Unreleased] - 2026-03-31 by *katharsis23*
 
 ### Fixed
 
@@ -40,7 +58,7 @@ All notable changes to this project will be documented in this file.
   - `/liked/` endpoint for GET liked apartments of user
   - `/{apartment_id}/like` endpoint for POST requests to toggle the like status of an apartment
 
-## [UnReleased] - 2026-03-26 by *katharsis23*
+## [Unreleased] - 2026-03-26 by *katharsis23*
 
 ### Added
 
@@ -52,7 +70,7 @@ All notable changes to this project will be documented in this file.
   - User type validation for apartment operations
   - Apartment liking and unliking functionality
 
-## [UnReleased] - 2026-03-27 by *nazar* & *katharsis23*
+## [Unreleased] - 2026-03-27 by *nazar* & *katharsis23*
 
 ### Fixed
 
