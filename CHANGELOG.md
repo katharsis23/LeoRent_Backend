@@ -2,9 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [UnReleased] - 2026-03-31 by *katharsis23*
+
+### Fixed
+
+- **Apartment Management**: Fixed apartment management endpoints
+  - Fixed apartment creation, retrieval, update, and deletion
+  - Fixed apartment liking and unliking functionality
+
+### Added
+
+- **Apartment Management**: Implemented apartment management endpoints
+  - `/my/` endpoint for GET apartments of user
+  - `/liked/` endpoint for GET liked apartments of user
+  - `/{apartment_id}/like` endpoint for POST requests to toggle the like status of an apartment
+
+## [UnReleased] - 2026-03-26 by *katharsis23*
+
+### Added
+
+- **Apartment Management**: Implemented apartment management endpoints
+  - `/apartment/` endpoint for GET and POST requests
+  - `/apartment/{apartment_id}` endpoint for GET and PUT requests
+  - `/apartment/{apartment_id}` endpoint for DELETE requests
+  - Apartment creation, retrieval, update, and deletion
+  - User type validation for apartment operations
+  - Apartment liking and unliking functionality
+
 ## [UnReleased] - 2026-03-27 by *nazar* & *katharsis23*
 
 ### Fixed
+
 - **Configuration Loading**: Fixed cascade validation errors on startup
   - Moved Redis configuration to separate module to prevent unrelated JWT/SMTP/S3 validation failures
   - BaseHTTPMiddleware now properly returns JSONResponse instead of raising HTTPException for rate limit responses
@@ -27,7 +55,7 @@ All notable changes to this project will be documented in this file.
   3. RateLimitMiddleware - enforces rate limits
   4. CORSMiddleware - handles CORS headers
 
-## [UnReleased] - 2026-03-23 by *katharsis23*
+## [Released] - 2026-03-23 by *katharsis23*
 
 ### Added
 - **Firebase Authentication**: Complete Firebase integration with ID token verification
