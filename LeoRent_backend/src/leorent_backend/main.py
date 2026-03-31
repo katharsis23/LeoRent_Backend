@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 
 # Middlewares
 from src.leorent_backend.middleware.logging import LoggingMiddleware, ErrorHandlingMiddleware
-from src.leorent_backend.middleware.rate_limiter import RateLimitMiddleware
 from src.leorent_backend.redis_client import redis_client
 
 # Routers
