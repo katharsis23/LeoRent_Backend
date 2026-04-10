@@ -278,3 +278,19 @@ async def like_apartment(
     except Exception as e:
         logger.error(f"Error liking apartment: {e}")
         raise e
+
+
+async def get_apartments_by_gemini_filter(
+    db: AsyncSession,
+    filter_query: dict,
+    current_page: int = 1,
+    page_size: int = 10
+) -> Optional[List[Apartment]]:
+    try:
+        # TODO: Add class For validationkf
+        # Consider using schemas but aware of circular import issue
+        pass
+        return None
+    except Exception as e:
+        logger.error(f"Error getting apartments by Gemini filter: {e}")
+        raise e

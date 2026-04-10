@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import UUID
 
 
@@ -163,7 +163,7 @@ class ApartmentResponse(BaseModel):
 
 
 class ApartmentListResponse(BaseModel):
-    apartments: list[ApartmentResponse]
+    apartments: List[ApartmentResponse]
 
 
 class ApartmentPreviewResponse(BaseModel):
@@ -184,7 +184,7 @@ class ApartmentPreviewResponse(BaseModel):
 
 
 class ApartmentPreviewListResponse(BaseModel):
-    apartments: list[ApartmentPreviewResponse]
+    apartments: List[ApartmentPreviewResponse]
 
 
 class ApartmentLikeResponse(BaseModel):
