@@ -229,6 +229,6 @@ alembic.ini
 # Firebase test
 firebase_test.html
 
-# md files
 
+# Unnesecarry md files
 test*.md

@@ -1,6 +1,4 @@
-from sqlalchemy.ext.asyncio import (
-    create_async_engine, async_sessionmaker, AsyncSession
-)
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from src.leorent_backend.config.database import DATABASE_CONFIG
 from sqlalchemy.future import select
 from sqlalchemy.orm import declarative_base
@@ -22,9 +20,7 @@ engine = create_async_engine(
 
 # Async session
 AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
