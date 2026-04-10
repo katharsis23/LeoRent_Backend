@@ -58,7 +58,7 @@ class TestFirebaseAuth:
                 "first_name": "John",
                 "last_name": "Doe",
                 "phone": "+1234567890",
-                "user_type": "DEFAULT"
+                "user_type": "AGENT"
             }
         )
 
@@ -71,7 +71,7 @@ class TestFirebaseAuth:
         assert data["firebase_uid"] == firebase_decoded_token["uid"]
         assert data["first_name"] == "John"
         assert data["last_name"] == "Doe"
-        assert data["user_type"] == "DEFAULT"
+        assert data["user_type"] == "AGENT"
         assert "id" in data
 
     @patch('src.leorent_backend.external.firebase_client.firebase_app')
