@@ -9,6 +9,7 @@ from fastapi import HTTPException
 import src.leorent_backend.schemas.apartment as apartment_schemas
 import src.leorent_backend.database.user as user_db
 from typing import Optional, List
+from src.leorent_backend.schemas.filter import FilterApartment
 
 
 async def get_apartments(db: AsyncSession, current_page: int = 1, page_size: int = 10):
@@ -277,4 +278,37 @@ async def like_apartment(
         return like.apartment_id
     except Exception as e:
         logger.error(f"Error liking apartment: {e}")
+        raise e
+
+
+async def get_apartments_by_gemini_filter(
+    db: AsyncSession,
+    filter_query: FilterApartment,
+    current_page: int = 1,
+    page_size: int = 10
+) -> List[Apartment]:
+    try:
+        query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
+        data = filter_query.model_dump(exclude_unset=True)
+
+        # Mapping logic for ranges
+        if data.get("cost"):
+            query = query.where(Apartment.cost.between(int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
+
+        if data.get("square"):
+            query = query.where(Apartment.square.between(data["square"] * 0.8, data["square"] * 1.2))
+
+        # Exact matches for non-zero/non-null values
+        for field in ["renovation_type", "type_", "rooms", "floor"]:
+            val = data.get(field)
+            if val:
+                query = query.where(getattr(Apartment, field) == val)
+
+        # Execute with pagination
+        result = await db.execute(
+            query.offset((current_page - 1) * page_size).limit(page_size)
+        )
+        return result.scalars().all()
+    except Exception as e:
+        logger.error(f"Error getting apartments by Gemini filter: {e}")
         raise e
