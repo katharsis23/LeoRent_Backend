@@ -13,6 +13,7 @@ from src.leorent_backend.routers.user import user_router
 from src.leorent_backend.routers.photos import photo_router
 from src.leorent_backend.routers.firebase import firebase_router
 from src.leorent_backend.routers.apartment import apartment_router
+from src.leorent_backend.routers.filter import filter_router
 
 
 @asynccontextmanager
@@ -64,3 +65,4 @@ app.include_router(healthcheck_router)
 app.include_router(user_router)
 app.include_router(firebase_router)
 app.include_router(apartment_router)
+app.include_router(filter_router)

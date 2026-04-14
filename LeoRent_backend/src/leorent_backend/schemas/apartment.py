@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict, Field
 from typing import Optional, Dict, Any, List
 from uuid import UUID
 
@@ -170,7 +170,7 @@ class ApartmentPreviewResponse(BaseModel):
     id_: UUID
     title: str
     cost: int
-    rent_type: str
+    rent_type: Any
     rooms: int
     square: float
     floor: int
@@ -179,12 +179,32 @@ class ApartmentPreviewResponse(BaseModel):
     renovation_type: str
     location: str
     district: str
-    owner_type: str
     is_liked_by_current_user: bool = False
+    owner_type: str = Field(alias="owner")
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True
+    )
+
+    @field_validator("owner_type", mode="before")
+    @classmethod
+    def transform_uuid_to_str(cls, v: Any) -> str:
+        if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
+            return str(v)
+        return v
+
+    @field_validator("id_", mode="before")
+    @classmethod
+    def transform_id_to_str(cls, v: Any) -> str:
+        if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
+            return str(v)
+        return v
 
 
 class ApartmentPreviewListResponse(BaseModel):
     apartments: List[ApartmentPreviewResponse]
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ApartmentLikeResponse(BaseModel):
