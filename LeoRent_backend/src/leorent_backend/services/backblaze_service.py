@@ -3,12 +3,15 @@
 Завантаження та скачування фото
 """
 
+import asyncio
+import inspect
+from typing import Any, Optional
+
 import boto3
 import httpx
-import asyncio
-from loguru import logger
-from typing import Optional
 from botocore.exceptions import ClientError
+from loguru import logger
+
 from src.leorent_backend.config.backblaze import BACKBLAZE_CONFIG
 
 
@@ -23,23 +26,97 @@ class BackblazeService:
         )
         self.bucket_name = BACKBLAZE_CONFIG.bucket_name
 
-    async def upload_photo_from_url(self, photo_url: str, s3_key: str):
-        # 1. Скачити фото
-        async with httpx.AsyncClient(verify=False) as client:
-            response = await client.get(photo_url)
-            photo_bytes = response.content
+    async def _resolve_maybe_awaitable(self, value: Any) -> Any:
+        if inspect.isawaitable(value):
+            return await value
+        return value
 
-        # 2. Завантажити в S3 (без блокування event loop)
+    async def _fetch_photo_details(self, photo_url: str) -> dict[str, Any]:
+        async with httpx.AsyncClient(
+            verify=False,
+            follow_redirects=True,
+            timeout=30.0,
+        ) as client:
+            response = await client.get(photo_url)
+            await self._resolve_maybe_awaitable(response.raise_for_status())
+
+            raw_content_type = response.headers.get(
+                "content-type", "image/jpeg"
+            )
+            raw_content_type = await self._resolve_maybe_awaitable(
+                raw_content_type
+            )
+            content_type = str(raw_content_type).split(";")[0].strip().lower()
+
+            if not content_type.startswith("image/"):
+                raise ValueError(
+                    "URL must point directly to an image, not an HTML page."
+                )
+
+            photo_bytes = await self._resolve_maybe_awaitable(response.content)
+
+        return {
+            "data": photo_bytes,
+            "content_type": content_type,
+            "size_bytes": len(photo_bytes),
+        }
+
+    async def upload_photo_from_url_details(
+        self,
+        photo_url: str,
+        s3_key: str,
+    ) -> dict[str, Any]:
+        """Скачати фото за прямим URL і завантажити в Backblaze."""
+        photo_details = await self._fetch_photo_details(photo_url)
+
         await asyncio.to_thread(
             self.s3_client.put_object,
             Bucket=self.bucket_name,
             Key=s3_key,
-            Body=photo_bytes,
-            ContentType="image/jpeg"
+            Body=photo_details["data"],
+            ContentType=photo_details["content_type"],
         )
 
-        # 3. Повернути URL
-        return self._get_photo_url(s3_key)
+        return {
+            "url": self._get_photo_url(s3_key),
+            "content_type": photo_details["content_type"],
+            "size_bytes": photo_details["size_bytes"],
+        }
+
+    async def upload_photo_from_url(self, photo_url: str, s3_key: str):
+        result = await self.upload_photo_from_url_details(photo_url, s3_key)
+        return result["url"]
+
+    async def upload_photo_from_source_details(
+        self,
+        source: str,
+        s3_key: str,
+    ) -> dict[str, Any]:
+        """Upload photo from an existing URL or reuse a Backblaze URL."""
+        normalized_source = source.strip()
+        base_url = self._get_photo_url("")
+
+        if normalized_source.startswith(base_url):
+            photo_details = await self._fetch_photo_details(normalized_source)
+            return {
+                "url": normalized_source,
+                "content_type": photo_details["content_type"],
+                "size_bytes": photo_details["size_bytes"],
+            }
+
+        if normalized_source.startswith(("http://", "https://")):
+            return await self.upload_photo_from_url_details(
+                normalized_source,
+                s3_key,
+            )
+
+        raise ValueError(
+            "Picture source must be a direct http(s) image URL or a file upload."
+        )
+
+    async def upload_photo_from_source(self, source: str, s3_key: str) -> str:
+        result = await self.upload_photo_from_source_details(source, s3_key)
+        return result["url"]
 
     async def download_photo(self, s3_key: str) -> Optional[bytes]:
         """Скачати фото з Backblaze"""

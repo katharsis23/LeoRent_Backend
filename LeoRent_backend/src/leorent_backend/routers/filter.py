@@ -3,7 +3,6 @@ from fastapi_utils.cbv import cbv
 from src.leorent_backend.database_connector import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.leorent_backend.schemas.apartment import ApartmentPreviewListResponse, ApartmentPreviewResponse
-from src.leorent_backend.models import Apartment
 from fastapi.responses import JSONResponse
 from loguru import logger
 import src.leorent_backend.schemas.filter as filter_schema
@@ -40,9 +39,8 @@ class FilterRouter:
             except Exception as parse_error:
                 logger.error(f"Pydantic validation failed: {parse_error}")
                 return JSONResponse(
-                    status_code=422,
-                    content={"detail": "AI output didn't match internal filter schema."}
-                )
+                    status_code=422, content={
+                        "detail": "AI output didn't match internal filter schema."})
 
             # 3. DB Query (returns List[Apartment] models)
             apartments_db = await get_apartments_by_gemini_filter(
@@ -55,7 +53,8 @@ class FilterRouter:
 
             # 4. Wrap into the response schema
             # We use list comprehension to ensure every DB model is validated
-            # Ensure your ApartmentPreviewResponse has 'from_attributes = True' in its Config
+            # Ensure your ApartmentPreviewResponse has 'from_attributes = True'
+            # in its Config
             response_data = ApartmentPreviewListResponse(
                 apartments=[
                     ApartmentPreviewResponse.model_validate(apt, from_attributes=True)

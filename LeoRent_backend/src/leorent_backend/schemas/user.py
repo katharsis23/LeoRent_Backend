@@ -15,7 +15,8 @@ class CreateUser(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     first_name: Optional[str] = Field(None, max_length=50)
     last_name: Optional[str] = Field(None, max_length=50)
-    phone: str = Field(..., description="Phone number with country code, e.g. +380...")
+    phone: str = Field(...,
+                       description="Phone number with country code, e.g. +380...")
     password: str = Field(..., min_length=8)
     # TODO: Double check validity of user_type
     user_type: UserType = UserType.DEFAULT

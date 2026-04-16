@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [UnReleased] - 2026-04-16 by *nazar*
+
+### Added
+
+- **Apartment Photo Management**: Extended apartment image workflows with Backblaze integration
+  - Apartment creation now supports `main_pictures` from direct image URLs or multipart file uploads
+  - Added batch gallery upload endpoint for apartment photos via `POST /apartment/{apartment_id}/pictures`
+  - Added metadata enrichment for uploaded photos with `room`, `format`, and `size_bytes`
+  - Apartment responses now return `main_pictures` separately from additional `pictures`
+  - Added 10 MB upload limit validation for image files
+
+### Fixed
+
+- **Photo Lifecycle Behavior**: Improved consistency for apartment image handling
+  - Additional gallery uploads no longer overwrite or duplicate the apartment main photo
+  - Added soft delete for single gallery photos and bulk delete for all additional photos
+  - Deleting an apartment now soft-deletes all linked picture records
+
+- **Infrastructure & Storage**: Stabilized container and Backblaze behavior
+  - Docker Compose now loads runtime variables from `.env` instead of `.env.example`
+  - Improved Backblaze direct image URL validation and upload metadata extraction
+  - Fixed container startup dependency resolution for Gemini-related packages
+
 ## [UnReleased] - 2026-03-31 by *katharsis23*
 
 ### Fixed

@@ -311,26 +311,6 @@ class TestBackblazeServiceUnit:
     @pytest.mark.asyncio
     @patch("boto3.client")
     async def test_delete_photo_unit(self, mock_s3_client):
-        """Unit тест коли фото не знайдено"""
-        from src.leorent_backend.services.backblaze_service import BackblazeService
-        from botocore.exceptions import ClientError
-
-        # Мокуємо помилку 404
-        mock_s3 = MagicMock()
-        error_response = {"Error": {"Code": "NoSuchKey"}}
-        mock_s3.get_object.side_effect = ClientError(
-            error_response, "GetObject")
-        mock_s3_client.return_value = mock_s3
-
-        service = BackblazeService()
-
-        result = await service.download_photo("nonexistent/photo.jpg")
-
-        assert result is None
-
-    @pytest.mark.asyncio
-    @patch("boto3.client")
-    async def test_delete_photo_unit(self, mock_s3_client):
         """Unit тест для delete_photo"""
         from src.leorent_backend.services.backblaze_service import BackblazeService
 

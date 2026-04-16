@@ -12,7 +12,7 @@ services:
     volumes:
       - ./LeoRent_backend:/app
     env_file:
-      - .env.example
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,7 +29,7 @@ services:
     image: postgres:16-alpine
     container_name: postgres_container
     env_file:
-      - .env.example
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-leouser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leopass}

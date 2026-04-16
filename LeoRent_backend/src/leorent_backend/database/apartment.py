@@ -1,10 +1,10 @@
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from src.leorent_backend.models import Apartment
-from src.leorent_backend.models import Liked, UserType
+from src.leorent_backend.models import Apartment, Liked, Pictures, UserType
 from src.leorent_backend.database_connector import AsyncSession
 from loguru import logger
 from uuid import UUID
+from sqlalchemy import update
 from fastapi import HTTPException
 import src.leorent_backend.schemas.apartment as apartment_schemas
 import src.leorent_backend.database.user as user_db
@@ -12,7 +12,10 @@ from typing import Optional, List
 from src.leorent_backend.schemas.filter import FilterApartment
 
 
-async def get_apartments(db: AsyncSession, current_page: int = 1, page_size: int = 10):
+async def get_apartments(
+        db: AsyncSession,
+        current_page: int = 1,
+        page_size: int = 10):
     try:
         result = await db.execute(
             select(Apartment)
@@ -30,13 +33,44 @@ async def create_apartment(
     db: AsyncSession,
     apartment: apartment_schemas.ApartmentCreate,
     user_id: UUID,
+    pictures: Optional[List[dict]] = None,
 ):
     try:
-        db_apartment = Apartment(**apartment.model_dump(), owner=user_id)
+        apartment_data = apartment.model_dump(exclude={"main_pictures"})
+        picture_records = pictures or []
+        db_apartment = Apartment(
+            **apartment_data,
+            owner=user_id,
+            main_picture=(
+                picture_records[0]["url"] if picture_records else None),
+        )
         db.add(db_apartment)
+        await db.flush()
+        created_apartment_id = db_apartment.id_
+
+        for picture in picture_records:
+            metadata = {
+                key: value
+                for key, value in dict(picture.get("metadata") or {}).items()
+                if key != "is_main"
+            }
+            db.add(
+                Pictures(
+                    apartment_id=db_apartment.id_,
+                    url=picture["url"],
+                    metadata_=metadata,
+                )
+            )
+
         await db.commit()
-        await db.refresh(db_apartment)
-        return db_apartment
+        db.expire_all()
+
+        result = await db.execute(
+            select(Apartment)
+            .options(selectinload(Apartment.pictures))
+            .where(Apartment.id_ == created_apartment_id)
+        )
+        return result.scalar_one()
     except Exception as e:
         logger.error(f"Error creating apartment: {e}")
         raise e
@@ -46,7 +80,10 @@ async def get_apartment(db: AsyncSession, apartment_id: UUID):
     try:
         result = await db.execute(
             select(Apartment)
-            .options(selectinload(Apartment.owner_user))
+            .options(
+                selectinload(Apartment.owner_user),
+                selectinload(Apartment.pictures),
+            )
             .where(Apartment.id_ == apartment_id)
             .where(Apartment.is_deleted == False)   # noqa: E712
         )
@@ -56,14 +93,120 @@ async def get_apartment(db: AsyncSession, apartment_id: UUID):
         raise e
 
 
-async def is_allowed_to_create_apartment(db: AsyncSession, user_id: UUID) -> bool:
+async def add_apartment_pictures(
+    db: AsyncSession,
+    apartment_id: UUID,
+    pictures: List[dict],
+) -> Optional[Apartment]:
+    try:
+        apartment = await get_apartment(db, apartment_id)
+        if not apartment:
+            return None
+
+        for picture in pictures:
+            metadata = picture.get("metadata") or {}
+            db.add(
+                Pictures(
+                    apartment_id=apartment_id,
+                    url=picture["url"],
+                    metadata_=metadata,
+                )
+            )
+
+        await db.commit()
+        db.expire_all()
+        return await get_apartment(db, apartment_id)
+    except Exception as e:
+        logger.error(f"Error adding apartment pictures: {e}")
+        raise e
+
+
+async def soft_delete_all_apartment_pictures(
+    db: AsyncSession,
+    apartment_id: UUID,
+    user_id: UUID,
+) -> bool:
+    try:
+        apartment = await get_apartment(db, apartment_id)
+        if not apartment:
+            return False
+
+        if apartment.owner != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to delete apartment pictures",
+            )
+
+        conditions = [
+            Pictures.apartment_id == apartment_id,
+            Pictures.is_deleted.is_(False),
+        ]
+        if apartment.main_picture:
+            conditions.append(Pictures.url != apartment.main_picture)
+
+        await db.execute(
+            update(Pictures)
+            .where(*conditions)
+            .values(is_deleted=True)
+        )
+
+        await db.commit()
+        return True
+    except Exception as e:
+        logger.error(f"Error soft deleting all apartment pictures: {e}")
+        raise e
+
+
+async def soft_delete_apartment_picture(
+    db: AsyncSession,
+    apartment_id: UUID,
+    picture_id: UUID,
+    user_id: UUID,
+) -> bool:
+    try:
+        apartment = await get_apartment(db, apartment_id)
+        if not apartment:
+            return False
+
+        if apartment.owner != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to delete this picture",
+            )
+
+        conditions = [
+            Pictures.id_ == picture_id,
+            Pictures.apartment_id == apartment_id,
+            Pictures.is_deleted.is_(False),
+        ]
+        if apartment.main_picture:
+            conditions.append(Pictures.url != apartment.main_picture)
+
+        result = await db.execute(select(Pictures).where(*conditions))
+        picture = result.scalar_one_or_none()
+
+        if not picture:
+            return False
+
+        picture.is_deleted = True
+
+        await db.commit()
+        return True
+    except Exception as e:
+        logger.error(f"Error soft deleting apartment picture: {e}")
+        raise e
+
+
+async def is_allowed_to_create_apartment(
+        db: AsyncSession, user_id: UUID) -> bool:
     try:
         user_ = await user_db.find_user_by_id(user_id, db)
         if user_:
             return user_.type_ in (UserType.AGENT, UserType.OWNER)
         return False
     except Exception as e:
-        logger.error(f"Error checking if user is allowed to create apartment: {e}")
+        logger.error(
+            f"Error checking if user is allowed to create apartment: {e}")
         raise e
 
 
@@ -155,6 +298,13 @@ async def delete_apartment(
             )
 
         apartment.is_deleted = True
+
+        await db.execute(
+            update(Pictures)
+            .where(Pictures.apartment_id == apartment_id)
+            .values(is_deleted=True)
+        )
+
         await db.commit()
         return True
     except Exception as e:
@@ -169,7 +319,11 @@ async def get_apartments_by_user(
     page_size: int = 10
 ) -> List[Apartment]:
     try:
-        query = select(Apartment).where(Apartment.owner == user_id)
+        query = (
+            select(Apartment)
+            .options(selectinload(Apartment.pictures))
+            .where(Apartment.owner == user_id)
+        )
         result = await db.execute(
             query
             .offset((current_page - 1) * page_size)
@@ -193,7 +347,11 @@ async def get_liked_apartments_by_user(
         if not apartment_ids:
             return []
 
-        query = select(Apartment).where(Apartment.id_.in_(apartment_ids))
+        query = (
+            select(Apartment)
+            .options(selectinload(Apartment.pictures))
+            .where(Apartment.id_.in_(apartment_ids))
+        )
         result = await db.execute(query)
         return result.scalars().all()
     except Exception as e:
@@ -293,10 +451,14 @@ async def get_apartments_by_gemini_filter(
 
         # Mapping logic for ranges
         if data.get("cost"):
-            query = query.where(Apartment.cost.between(int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
+            query = query.where(Apartment.cost.between(
+                int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
 
         if data.get("square"):
-            query = query.where(Apartment.square.between(data["square"] * 0.8, data["square"] * 1.2))
+            query = query.where(
+                Apartment.square.between(
+                    data["square"] * 0.8,
+                    data["square"] * 1.2))
 
         # Exact matches for non-zero/non-null values
         for field in ["renovation_type", "type_", "rooms", "floor"]:
