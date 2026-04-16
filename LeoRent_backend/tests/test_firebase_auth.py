@@ -58,7 +58,7 @@ class TestFirebaseAuth:
                 "first_name": "John",
                 "last_name": "Doe",
                 "phone": "+1234567890",
-                "user_type": "DEFAULT"
+                "user_type": "AGENT"
             }
         )
 
@@ -71,12 +71,13 @@ class TestFirebaseAuth:
         assert data["firebase_uid"] == firebase_decoded_token["uid"]
         assert data["first_name"] == "John"
         assert data["last_name"] == "Doe"
-        assert data["user_type"] == "DEFAULT"
+        assert data["user_type"] == "AGENT"
         assert "id" in data
 
     @patch('src.leorent_backend.external.firebase_client.firebase_app')
     @patch('firebase_admin.auth.verify_id_token')
-    def test_firebase_auth_invalid_token(self, mock_verify, mock_firebase_app, client):
+    def test_firebase_auth_invalid_token(
+            self, mock_verify, mock_firebase_app, client):
         """Test Firebase authentication with invalid token."""
         # Setup mocks
         mock_firebase_app.return_value = MagicMock()
@@ -100,7 +101,11 @@ class TestFirebaseAuth:
 
     @patch('src.leorent_backend.external.firebase_client.firebase_app')
     @patch('firebase_admin.auth.verify_id_token')
-    def test_firebase_auth_no_token(self, mock_verify, mock_firebase_app, client):
+    def test_firebase_auth_no_token(
+            self,
+            mock_verify,
+            mock_firebase_app,
+            client):
         """Test Firebase authentication without token."""
         # Setup mocks
         mock_firebase_app.return_value = MagicMock()

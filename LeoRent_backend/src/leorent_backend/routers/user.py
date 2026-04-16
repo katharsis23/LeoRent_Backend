@@ -8,8 +8,6 @@ from src.leorent_backend.schemas.auth import FirebaseAuthRequest
 from src.leorent_backend.database_connector import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.leorent_backend.external.firebase_auth import get_current_user
-from src.leorent_backend.models import Users
-
 
 user_router = APIRouter(
     prefix="/users",
@@ -24,8 +22,8 @@ class UserRouter:
     @user_router.post(
         path="/signup/v1",
         description="""
-    Version 1 of the signup endpoint. Easy stub and may be insecure
-    Does not support firebase authentication
+    DEPRECATED: Version 1 of the signup endpoint.
+    Does not support firebase authentication.
     """,
     )
     async def create_user(self, user: CreateUser):
@@ -34,9 +32,7 @@ class UserRouter:
             if new_user is None:
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    content={
-                        "message": "User with duplicate fields"
-                    }
+                    content={"message": "User with duplicate fields"},
                 )
             return JSONResponse(
                 status_code=status.HTTP_201_CREATED,
@@ -48,19 +44,19 @@ class UserRouter:
                     "last_name": new_user.last_name,
                     "phone": new_user.phone_number,
                     "user_type": new_user.type_.value,
-                }
+                },
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=str(e)
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(
+                    e)
             )
 
     @user_router.post(
         path="/login/v1",
         description="""
-    Version 1 of the login endpoint. Easy stub and may be insecure
-    Does not support firebase authentication
+    DEPRECATED: Version 1 of the login endpoint.
+    Does not support firebase authentication.
     """,
     )
     async def login_user(self, user: LoginUser):
@@ -69,9 +65,7 @@ class UserRouter:
             if existing_user is None:
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    content={
-                        "message": "Invalid credentials"
-                    }
+                    content={"message": "Invalid credentials"},
                 )
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
@@ -79,12 +73,12 @@ class UserRouter:
                     "id": str(existing_user.id_),
                     "email": existing_user.email,
                     "username": existing_user.username,
-                }
+                },
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=str(e)
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(
+                    e)
             )
 
     @user_router.post(path="/firebase-auth/v1", description="""
@@ -92,7 +86,8 @@ class UserRouter:
     Supports Email/Password and Google providers
     Accepts Firebase ID token and profile data, returns user information
     """)
-    async def firebase_auth(self, request: FirebaseAuthRequest) -> JSONResponse:
+    async def firebase_auth(
+            self, request: FirebaseAuthRequest) -> JSONResponse:
         try:
             # Create a temporary credentials object from the token
             from fastapi.security import HTTPAuthorizationCredentials

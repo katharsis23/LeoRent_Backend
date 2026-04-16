@@ -68,11 +68,16 @@ async def get_current_user(
         if not user:
             # Extract user info from Firebase token if not provided
             if not first_name:
-                first_name = decoded_token.get('first_name') or decoded_token.get('name', '').split(' ')[0] or ''
+                first_name = decoded_token.get('first_name') or decoded_token.get(
+                    'name', '').split(' ')[0] or ''
             if not last_name:
-                last_name = decoded_token.get('last_name') or (decoded_token.get('name', '').split(' ')[1] if ' ' in decoded_token.get('name', '') else '') or ''
+                last_name = decoded_token.get('last_name') or (
+                    decoded_token.get(
+                        'name', '').split(' ')[1] if ' ' in decoded_token.get(
+                        'name', '') else '') or ''
 
-            # For phone and user_type, they MUST be provided if we create a user
+            # For phone and user_type, they MUST be provided if we create a
+            # user
             if not phone:
                 phone = decoded_token.get('phone_number') or ''
 

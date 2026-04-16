@@ -34,8 +34,7 @@ RUN if [ "$MODE" = "production" ]; then \
 # Codebase copy
 COPY LeoRent_backend/src/ ./src/
 
-# Config copy
-COPY .env.example .env
+# Runtime environment comes from docker-compose env_file
 
 # Linter check
 # RUN if [ "$MODE" = "debug" ]; then \
