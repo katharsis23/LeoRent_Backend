@@ -42,6 +42,27 @@ class ApartmentCreate(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
+    main_pictures: Optional[List[str]] = None
+
+    @field_validator("main_pictures", mode="before")
+    @classmethod
+    def normalize_main_pictures(cls, v):
+        if v in (None, "", []):
+            return None
+        if isinstance(v, str):
+            stripped = v.strip()
+            if stripped.startswith("[") and stripped.endswith("]"):
+                import json
+                loaded = json.loads(stripped)
+                if isinstance(loaded, list):
+                    return [
+                        str(item).strip() for item in loaded
+                        if str(item).strip()
+                    ]
+            return [stripped]
+        if isinstance(v, (tuple, set, list)):
+            return [str(item).strip() for item in v if str(item).strip()]
+        return v
 
     @field_validator('cost')
     def cost_must_be_positive(cls, v):
@@ -139,6 +160,8 @@ class ApartmentFullInfoResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
+    main_pictures: List[str] = Field(default_factory=list)
+    pictures: List[Dict[str, Any]] = Field(default_factory=list)
     owner_type: str
     owner_info: Dict[str, Any]
 
@@ -159,6 +182,8 @@ class ApartmentResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
+    main_pictures: List[str] = Field(default_factory=list)
+    pictures: List[Dict[str, Any]] = Field(default_factory=list)
     owner: UUID
 
 

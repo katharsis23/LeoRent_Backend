@@ -8,7 +8,6 @@ from src.leorent_backend.schemas.auth import FirebaseAuthRequest
 from src.leorent_backend.database_connector import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.leorent_backend.external.firebase_auth import get_current_user
-from src.leorent_backend.models import Users
 
 user_router = APIRouter(
     prefix="/users",

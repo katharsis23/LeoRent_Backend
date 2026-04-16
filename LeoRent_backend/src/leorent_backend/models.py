@@ -127,6 +127,12 @@ class Apartment(BASE):
     owner_user: Mapped["Users"] = relationship(
         "Users", back_populates="apartments")
 
+    main_picture: Mapped[Optional[str]] = mapped_column(
+        "main_pictures",
+        String(255),
+        nullable=True
+    )
+
     pictures: Mapped[List["Pictures"]] = relationship(
         "Pictures", back_populates="apartment", cascade="all, delete-orphan"
     )
