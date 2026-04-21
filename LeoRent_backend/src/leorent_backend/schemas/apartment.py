@@ -203,7 +203,7 @@ class ApartmentPreviewResponse(BaseModel):
     location: str
     district: str
     is_liked_by_current_user: bool = False
-    owner_type: str
+    owner_type: str = Field(alias="owner")
     picture: Optional[str] = None
 
     model_config = ConfigDict(
@@ -213,13 +213,17 @@ class ApartmentPreviewResponse(BaseModel):
 
     @field_validator("owner_type", mode="before")
     @classmethod
-    def transform_owner_type(cls, v: Any) -> str:
-        return str(v)
+    def transform_uuid_to_str(cls, v: Any) -> str:
+        if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
+            return str(v)
+        return v
 
     @field_validator("id_", mode="before")
     @classmethod
-    def transform_id(cls, v: Any) -> str:
-        return str(v)
+    def transform_id_to_str(cls, v: Any) -> str:
+        if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
+            return str(v)
+        return v
 
 
 class ApartmentPreviewListResponse(BaseModel):

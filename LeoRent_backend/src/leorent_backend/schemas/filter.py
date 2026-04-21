@@ -1,7 +1,11 @@
 from pydantic import BaseModel, field_validator
 from src.leorent_backend.models import RentType
 from typing import Optional, Any, Dict
-from src.leorent_backend.schemas.apartment import ALLOWED_FIELDS, ALLOWED_RENT_TYPES, ALLOWED_TYPES
+from src.leorent_backend.schemas.apartment import (
+    ALLOWED_FIELDS,
+    ALLOWED_RENT_TYPES,
+    ALLOWED_RENOVATION_TYPES,
+)
 
 
 class FilterPrompt(BaseModel):
@@ -16,14 +20,14 @@ class FilterPrompt(BaseModel):
 
 class FilterApartment(BaseModel):
     # Default values to avoid empty request
-    renovation_type: Optional[str]
+    renovation_type: Optional[str] = None
     cost: Optional[int] = 0
     square: Optional[float] = 0.0
     rooms: Optional[int] = 0
     rent_type: Optional[RentType] = 'DEFAULT'
     floor: Optional[int] = 0
     floor_in_house: Optional[int] = 0
-    details: Optional[Dict[Any, bool]]
+    details: Optional[Dict[Any, bool]] = None
 
     @field_validator("cost")
     def cost_must_be_positive(cls, v: int) -> int:
@@ -67,14 +71,15 @@ class FilterApartment(BaseModel):
             if key in ALLOWED_FIELDS
         }
 
-    @field_validator("rent_type")
-    def rent_type_consistency(cls, v: str) -> str:
-        if v not in ALLOWED_RENT_TYPES:
+    @field_validator("rent_type", mode="before")
+    def rent_type_consistency(cls, v: Any) -> str:
+        rent_type_value = getattr(v, "value", v)
+        if rent_type_value not in ALLOWED_RENT_TYPES:
             return 'DEFAULT'
-        return v
+        return rent_type_value
 
     @field_validator("renovation_type")
     def renovation_type_consistency(cls, v: str) -> str:
-        if v not in ALLOWED_TYPES:
+        if v not in ALLOWED_RENOVATION_TYPES:
             return 'none'
         return v

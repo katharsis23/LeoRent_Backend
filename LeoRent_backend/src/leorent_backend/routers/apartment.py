@@ -470,9 +470,9 @@ class ApartmentController:
                         renovation_type=apartment.renovation_type,
                         location=apartment.location,
                         district=apartment.district,
-                        owner_type=str(owner_type_val.value) if owner_type_val else "DEFAULT",
+                        owner_type=str(owner_type_val.value) if owner_type_val else None,
                         is_liked_by_current_user=is_liked,
-                        picture=apartment.pictures[0].url if apartment.pictures else None
+                        picture=apartment.pictures[0].url if apartment.pictures else "https://leorent-photos.s3.eu-central-003.backblazeb2.com/apartments/default/default.jpg"
                     )
                 )
 
