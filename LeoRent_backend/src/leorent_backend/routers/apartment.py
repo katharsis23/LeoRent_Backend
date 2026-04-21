@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import src.leorent_backend.database.apartment as apartment_db
 import src.leorent_backend.schemas.apartment as apartment_schemas
 from src.leorent_backend.database_connector import get_db
-from src.leorent_backend.external.firebase_auth import get_current_user
+from src.leorent_backend.external.firebase_auth import get_current_user, get_optional_user
 from src.leorent_backend.models import Users
 from src.leorent_backend.services.backblaze_service import backblaze_service
 
@@ -403,14 +403,16 @@ async def _upload_picture_entries(
 @cbv(apartment_router)
 class ApartmentController:
     db: AsyncSession = Depends(get_db)
-    user_: Users = Depends(get_current_user)
 
     @apartment_router.get(
         path="/",
         description="Get actual apartments with pagination given as query parameters",
         response_model=apartment_schemas.ApartmentPreviewListResponse)
     async def get_apartments(
-        self, current_page: int = 1, page_size: int = 10
+        self,
+        current_page: int = 1,
+        page_size: int = 10,
+        user_: Users | None = Depends(get_optional_user)
     ):
         try:
             apartments = await apartment_db.get_apartments(
@@ -419,9 +421,11 @@ class ApartmentController:
 
             apartments_with_like_status = []
             for apartment in apartments:
-                is_liked = await apartment_db.is_apartment_liked_by_user(
-                    self.db, apartment.id_, self.user_.id_
-                )
+                is_liked = False
+                if user_:
+                    is_liked = await apartment_db.is_apartment_liked_by_user(
+                        self.db, apartment.id_, user_.id_
+                    )
 
                 owner_type = await apartment_db.get_user_type_from_apartment(
                     self.db, apartment.id_
@@ -460,10 +464,14 @@ class ApartmentController:
         path="/",
         description="Create a new apartment"
     )
-    async def create_apartment(self, request: Request):
+    async def create_apartment(
+        self,
+        request: Request,
+        user_: Users = Depends(get_current_user)
+    ):
         try:
             from src.leorent_backend.models import UserType
-            if self.user_.type_ not in (UserType.AGENT, UserType.OWNER):
+            if user_.type_ not in (UserType.AGENT, UserType.OWNER):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User is not allowed to create an apartment"
@@ -473,13 +481,13 @@ class ApartmentController:
                 request
             )
             saved_pictures = await _upload_main_pictures(
-                self.user_.id_, apartment, uploaded_files
+                user_.id_, apartment, uploaded_files
             )
 
             apartment = await apartment_db.create_apartment(
                 self.db,
                 apartment,
-                self.user_.id_,
+                user_.id_,
                 pictures=saved_pictures,
             )
             return JSONResponse(
@@ -509,6 +517,7 @@ class ApartmentController:
         self,
         apartment_id: UUID,
         request: Request,
+        user_: Users = Depends(get_current_user)
     ):
         try:
             apartment = await apartment_db.get_apartment(self.db, apartment_id)
@@ -519,7 +528,7 @@ class ApartmentController:
                     detail="Apartment not found",
                 )
 
-            if apartment.owner != self.user_.id_:
+            if apartment.owner != user_.id_:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Only the apartment owner can add pictures",
@@ -533,7 +542,7 @@ class ApartmentController:
                 )
 
             saved_pictures = await _upload_picture_entries(
-                self.user_.id_,
+                user_.id_,
                 picture_entries,
             )
             apartment = await apartment_db.add_apartment_pictures(
@@ -563,12 +572,16 @@ class ApartmentController:
         path="/{apartment_id}/pictures",
         description="Soft delete all apartment pictures"
     )
-    async def delete_all_apartment_pictures(self, apartment_id: UUID):
+    async def delete_all_apartment_pictures(
+        self,
+        apartment_id: UUID,
+        user_: Users = Depends(get_current_user)
+    ):
         try:
             success = await apartment_db.soft_delete_all_apartment_pictures(
                 self.db,
                 apartment_id,
-                self.user_.id_,
+                user_.id_,
             )
 
             if not success:
@@ -596,13 +609,14 @@ class ApartmentController:
         self,
         apartment_id: UUID,
         picture_id: UUID,
+        user_: Users = Depends(get_current_user)
     ):
         try:
             success = await apartment_db.soft_delete_apartment_picture(
                 self.db,
                 apartment_id,
                 picture_id,
-                self.user_.id_,
+                user_.id_,
             )
 
             if not success:
@@ -623,7 +637,11 @@ class ApartmentController:
         path="/{apartment_id}",
         description="Get apartment by id with full info and user details"
     )
-    async def get_apartment(self, apartment_id: UUID):
+    async def get_apartment(
+        self,
+        apartment_id: UUID,
+        user_: Users | None = Depends(get_optional_user)
+    ):
         try:
             apartment = await apartment_db.get_apartment(self.db, apartment_id)
 
@@ -676,10 +694,11 @@ class ApartmentController:
     async def update_apartment(
             self,
             apartment_id: UUID,
-            apartment_update: apartment_schemas.ApartmentUpdate):
+            apartment_update: apartment_schemas.ApartmentUpdate,
+            user_: Users = Depends(get_current_user)):
         try:
             apartment = await apartment_db.update_apartment(
-                self.db, apartment_id, apartment_update, self.user_.id_
+                self.db, apartment_id, apartment_update, user_.id_
             )
 
             if not apartment:
@@ -702,10 +721,14 @@ class ApartmentController:
         path="/{apartment_id}",
         description="Soft delete an apartment"
     )
-    async def delete_apartment(self, apartment_id: UUID):
+    async def delete_apartment(
+        self,
+        apartment_id: UUID,
+        user_: Users = Depends(get_current_user)
+    ):
         try:
             success = await apartment_db.delete_apartment(
-                self.db, apartment_id, self.user_.id_
+                self.db, apartment_id, user_.id_
             )
 
             if not success:
@@ -731,11 +754,14 @@ class ApartmentController:
         response_model=apartment_schemas.ApartmentListResponse
     )
     async def get_my_apartments(
-        self, current_page: int = 1, page_size: int = 10
+        self,
+        current_page: int = 1,
+        page_size: int = 10,
+        user_: Users = Depends(get_current_user)
     ):
         try:
             apartments = await apartment_db.get_apartments_by_user(
-                self.db, self.user_.id_, current_page, page_size
+                self.db, user_.id_, current_page, page_size
             )
 
             # Use Pydantic schema for serialization
@@ -777,10 +803,14 @@ class ApartmentController:
         description="Toggle like/unlike for an apartment",
         response_model=apartment_schemas.ApartmentLikeResponse
     )
-    async def toggle_like_apartment(self, apartment_id: UUID):
+    async def toggle_like_apartment(
+        self,
+        apartment_id: UUID,
+        user_: Users = Depends(get_current_user)
+    ):
         try:
             result = await apartment_db.toggle_like_apartment(
-                self.db, apartment_id, self.user_.id_
+                self.db, apartment_id, user_.id_
             )
 
             if "error" in result:
@@ -811,10 +841,13 @@ class ApartmentController:
         description="Get liked apartments",
         response_model=apartment_schemas.ApartmentListResponse
     )
-    async def get_liked_apartments(self):
+    async def get_liked_apartments(
+        self,
+        user_: Users = Depends(get_current_user)
+    ):
         try:
             liked_apartments = await apartment_db.get_liked_apartments_by_user(
-                self.db, self.user_.id_
+                self.db, user_.id_
             )
 
             # Use Pydantic schema for serialization
