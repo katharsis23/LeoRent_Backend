@@ -109,3 +109,73 @@ async def get_current_user(
             detail="Authentication failed",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+async def get_optional_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: AsyncSession = Depends(get_db),
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    phone: Optional[str] = None,
+    user_type: Optional[UserType] = None
+) -> Optional[Users]:
+    """
+    Get current authenticated user from Firebase token, or None if not authenticated
+
+    Args:
+        credentials: Bearer token from Authorization header
+        db: Database session
+
+    Returns:
+        Users | None: Current authenticated user, or None if no valid token provided
+    """
+    if not credentials:
+        return None
+
+    if not firebase_client.firebase_app:
+        return None
+
+    try:
+        # Verify Firebase ID token
+        decoded_token = auth.verify_id_token(
+            credentials.credentials,
+            check_revoked=True,
+            clock_skew_seconds=10
+        )
+        firebase_uid = decoded_token.get('uid')
+
+        if not firebase_uid:
+            return None
+
+        # Find user in database
+        user = await find_user_by_firebase_uid(firebase_uid, db)
+        if not user:
+            # Extract user info from Firebase token if not provided
+            if not first_name:
+                first_name = decoded_token.get('first_name') or decoded_token.get(
+                    'name', '').split(' ')[0] or ''
+            if not last_name:
+                last_name = decoded_token.get('last_name') or (
+                    decoded_token.get(
+                        'name', '').split(' ')[1] if ' ' in decoded_token.get(
+                        'name', '') else '') or ''
+
+            # For phone and user_type, they MUST be provided if we create a
+            # user
+            if not phone:
+                phone = decoded_token.get('phone_number') or ''
+
+            if not user_type:
+                user_type = UserType.DEFAULT
+
+            user = await create_user_from_firebase(
+                decoded_token, first_name, last_name, phone, user_type, db
+            )
+
+        return user
+
+    except auth.InvalidIdTokenError:
+        return None
+    except Exception as e:
+        logger.error(f"Optional authentication error: {e}")
+        return None

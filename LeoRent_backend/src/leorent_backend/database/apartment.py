@@ -474,3 +474,18 @@ async def get_apartments_by_gemini_filter(
     except Exception as e:
         logger.error(f"Error getting apartments by Gemini filter: {e}")
         raise e
+
+
+async def get_apartment_first_photo(
+    db: AsyncSession,
+    apartment_id: UUID,
+) -> Optional[Pictures]:
+    try:
+        apartment = await get_apartment(db, apartment_id)
+        if not apartment:
+            return None
+        photo = apartment.pictures[0]
+        return photo if photo else None
+    except Exception as error:
+        logger.error(f"Couldnt retrieve the first photo: {error}")
+        raise error
