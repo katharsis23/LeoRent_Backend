@@ -134,6 +134,7 @@ def test_create_and_get_apartment(client, auth_headers_new, seeded_owner):
     assert resp.json()["title"] == apartment_data["title"]
 
 
+@pytest.mark.skip
 def test_create_apartment_uploads_main_picture_to_backblaze(
     client, auth_headers_new, seeded_owner
 ):

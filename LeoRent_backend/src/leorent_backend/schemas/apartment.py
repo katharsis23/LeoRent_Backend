@@ -160,7 +160,6 @@ class ApartmentFullInfoResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
-    main_pictures: List[str] = Field(default_factory=list)
     pictures: List[Dict[str, Any]] = Field(default_factory=list)
     owner_type: str
     owner_info: Dict[str, Any]
@@ -206,6 +205,7 @@ class ApartmentPreviewResponse(BaseModel):
     district: str
     is_liked_by_current_user: bool = False
     owner_type: str = Field(alias="owner")
+    picture: Optional[str] = None
 
     model_config = ConfigDict(
         from_attributes=True,
