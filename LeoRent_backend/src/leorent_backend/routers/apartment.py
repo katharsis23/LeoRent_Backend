@@ -445,7 +445,7 @@ class ApartmentController:
                         renovation_type=apartment.renovation_type,
                         location=apartment.location,
                         district=apartment.district,
-                        owner_type=str(owner_type),
+                        owner_type=str(owner_type.value),
                         is_liked_by_current_user=is_liked,
                         picture=apartment.pictures[0].url if apartment.pictures else "https://s3.eu-central-003.backblazeb2.com/leorent-photos/apartments/0e7ccb08-22db-401b-a8c3-01a15ca49397/5cccba33-52e3-4523-8de0-6e10c355969b.jpg"
                     )
@@ -782,7 +782,6 @@ class ApartmentController:
                     details=apartment.details,
                     type_=apartment.type_,
                     renovation_type=apartment.renovation_type,
-                    main_pictures=_get_picture_urls(apartment),
                     pictures=_serialize_picture_records(apartment),
                     owner=apartment.owner
                 ) for apartment in apartments
@@ -868,7 +867,6 @@ class ApartmentController:
                     details=apartment.details,
                     type_=apartment.type_,
                     renovation_type=apartment.renovation_type,
-                    main_pictures=_get_picture_urls(apartment),
                     pictures=_serialize_picture_records(apartment),
                     owner=apartment.owner
                 ) for apartment in liked_apartments

@@ -181,7 +181,6 @@ class ApartmentResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
-    main_pictures: List[str] = Field(default_factory=list)
     pictures: List[Dict[str, Any]] = Field(default_factory=list)
     owner: UUID
 
