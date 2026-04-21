@@ -12,6 +12,7 @@ from typing import Optional, List
 from src.leorent_backend.schemas.filter import FilterApartment
 from sqlalchemy import func
 
+
 async def get_apartments(
     db: AsyncSession,
     current_page: int = 1,
