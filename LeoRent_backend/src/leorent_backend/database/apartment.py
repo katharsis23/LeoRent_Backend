@@ -10,20 +10,69 @@ import src.leorent_backend.schemas.apartment as apartment_schemas
 import src.leorent_backend.database.user as user_db
 from typing import Optional, List
 from src.leorent_backend.schemas.filter import FilterApartment
-
+from sqlalchemy import func
 
 async def get_apartments(
-        db: AsyncSession,
-        current_page: int = 1,
-        page_size: int = 10):
+    db: AsyncSession,
+    current_page: int = 1,
+    page_size: int = 6,
+    filters: dict | None = None,
+    sort: str = "newest",
+) -> tuple[list, int]:
     try:
-        result = await db.execute(
+        filters = filters or {}
+        conditions = [Apartment.is_deleted == False]  # noqa
+
+        if filters.get("district"):
+            conditions.append(Apartment.district == filters["district"])
+        if filters.get("price_min"):
+            conditions.append(Apartment.cost >= filters["price_min"])
+        if filters.get("price_max"):
+            conditions.append(Apartment.cost <= filters["price_max"])
+        if filters.get("rooms"):
+            conditions.append(Apartment.rooms.in_(filters["rooms"]))
+        if filters.get("square_min"):
+            conditions.append(Apartment.square >= filters["square_min"])
+        if filters.get("square_max"):
+            conditions.append(Apartment.square <= filters["square_max"])
+        if filters.get("floor_min"):
+            conditions.append(Apartment.floor >= filters["floor_min"])
+        if filters.get("floor_max"):
+            conditions.append(Apartment.floor <= filters["floor_max"])
+        if filters.get("rent_type") and filters["rent_type"] != "all":
+            conditions.append(Apartment.rent_type == filters["rent_type"])
+        if filters.get("owner_type") and filters["owner_type"] != "all":
+            from src.leorent_backend.models import Users
+            conditions.append(
+                Apartment.owner.in_(
+                    select(Users.id_).where(Users.type_ == filters["owner_type"])
+                )
+            )
+
+        # sort
+        from sqlalchemy import asc, desc
+        order = desc(Apartment.id_)
+        if sort == "price_asc":
+            order = asc(Apartment.cost)
+        elif sort == "price_desc":
+            order = desc(Apartment.cost)
+
+        # total count
+        count_q = select(func.count()).select_from(Apartment).where(*conditions)
+        total = (await db.execute(count_q)).scalar() or 0
+
+        # paginated
+        q = (
             select(Apartment)
-            .where(Apartment.is_deleted == False)   # noqa: E712
+            .options(selectinload(Apartment.pictures))
+            .where(*conditions)
+            .order_by(order)
             .offset((current_page - 1) * page_size)
             .limit(page_size)
         )
-        return result.scalars().all()
+        result = await db.execute(q)
+        return result.scalars().all(), total
+
     except Exception as e:
         logger.error(f"Error getting apartments: {e}")
         raise e
