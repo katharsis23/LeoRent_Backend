@@ -181,7 +181,6 @@ class ApartmentResponse(BaseModel):
     details: Optional[Dict[str, Any]] = None
     type_: str
     renovation_type: str
-    main_pictures: List[str] = Field(default_factory=list)
     pictures: List[Dict[str, Any]] = Field(default_factory=list)
     owner: UUID
 
@@ -229,6 +228,10 @@ class ApartmentPreviewResponse(BaseModel):
 
 class ApartmentPreviewListResponse(BaseModel):
     apartments: List[ApartmentPreviewResponse]
+    total: int = 0
+    page: int = 1
+    page_size: int = 6
+
     model_config = ConfigDict(from_attributes=True)
 
 
