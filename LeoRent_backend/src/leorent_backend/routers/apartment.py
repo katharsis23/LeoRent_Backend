@@ -407,17 +407,42 @@ class ApartmentController:
     @apartment_router.get(
         path="/",
         description="Get actual apartments with pagination given as query parameters",
-        response_model=apartment_schemas.ApartmentPreviewListResponse)
+    )
     async def get_apartments(
         self,
         current_page: int = 1,
-        page_size: int = 10,
+        page_size: int = 6,
+        district: str | None = None,
+        price_min: int | None = None,
+        price_max: int | None = None,
+        rooms: str | None = None,
+        square_min: float | None = None,
+        square_max: float | None = None,
+        floor_min: int | None = None,
+        floor_max: int | None = None,
+        rent_type: str | None = None,
+        owner_type: str | None = None,
+        sort: str = "newest",
         user_: Users | None = Depends(get_optional_user)
     ):
         try:
-            apartments = await apartment_db.get_apartments(
-                self.db, current_page, page_size
+            filters = {
+                "district": district,
+                "price_min": price_min,
+                "price_max": price_max,
+                "rooms": [int(r) for r in rooms.split(",")] if rooms else None,
+                "square_min": square_min,
+                "square_max": square_max,
+                "floor_min": floor_min,
+                "floor_max": floor_max,
+                "rent_type": rent_type,
+                "owner_type": owner_type,
+            }
+
+            apartments, total = await apartment_db.get_apartments(
+                self.db, current_page, page_size, filters, sort
             )
+            logger.debug(f"DB total: {total}, count: {len(apartments)}")
 
             apartments_with_like_status = []
             for apartment in apartments:
@@ -427,7 +452,7 @@ class ApartmentController:
                         self.db, apartment.id_, user_.id_
                     )
 
-                owner_type = await apartment_db.get_user_type_from_apartment(
+                owner_type_val = await apartment_db.get_user_type_from_apartment(
                     self.db, apartment.id_
                 )
 
@@ -445,21 +470,29 @@ class ApartmentController:
                         renovation_type=apartment.renovation_type,
                         location=apartment.location,
                         district=apartment.district,
-                        owner_type=str(owner_type.value),
+                        owner_type=str(owner_type_val.value) if owner_type_val else None,
                         is_liked_by_current_user=is_liked,
-                        picture=apartment.pictures[0].url if apartment.pictures else "https://s3.eu-central-003.backblazeb2.com/leorent-photos/apartments/0e7ccb08-22db-401b-a8c3-01a15ca49397/5cccba33-52e3-4523-8de0-6e10c355969b.jpg"
+                        picture=apartment.pictures[0].url if apartment.pictures else "https://leorent-photos.s3.eu-central-003.backblazeb2.com/apartments/default/default.jpg"
                     )
                 )
 
-            return JSONResponse(
-                content=apartment_schemas.ApartmentPreviewListResponse(
-                    apartments=apartments_with_like_status
-                ).model_dump(mode="json"),
-                status_code=status.HTTP_200_OK
+            response_data = apartment_schemas.ApartmentPreviewListResponse(
+                apartments=apartments_with_like_status,
+                total=total,
+                page=current_page,
+                page_size=page_size,
+            ).model_dump(mode="json")
+
+            logger.debug(f"Response total: {response_data.get('total')}")
+
+            return JSONResponse(content=response_data, status_code=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in get_apartments: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
             )
-        except HTTPException as http_error:
-            logger.error(f"HTTPException: {http_error}")
-            raise http_error
 
     @apartment_router.post(
         path="/",
@@ -756,7 +789,7 @@ class ApartmentController:
     async def get_my_apartments(
         self,
         current_page: int = 1,
-        page_size: int = 10,
+        page_size: int = 30,
         user_: Users = Depends(get_current_user)
     ):
         try:

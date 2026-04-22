@@ -228,6 +228,10 @@ class ApartmentPreviewResponse(BaseModel):
 
 class ApartmentPreviewListResponse(BaseModel):
     apartments: List[ApartmentPreviewResponse]
+    total: int = 0
+    page: int = 1
+    page_size: int = 6
+
     model_config = ConfigDict(from_attributes=True)
 
 
