@@ -1,10 +1,11 @@
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import JSON, String, Integer, Boolean, Text, Float, ForeignKey
+from sqlalchemy import JSON, String, Integer, Boolean, Text, Float, ForeignKey, TIMESTAMP, func
 from src.leorent_backend.database_connector import BASE
 from uuid import UUID as PythonUUID, uuid4
 from enum import Enum
 from typing import Optional, Dict, Any, List
+from datetime import datetime, timezone
 
 
 # Basic Constants(Enums)
@@ -116,6 +117,13 @@ class Apartment(BASE):
     type_: Mapped[str] = mapped_column(String(255), nullable=False)
 
     renovation_type: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=func.now(),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     # Foreign key with proper constraint
     owner: Mapped[PythonUUID] = mapped_column(

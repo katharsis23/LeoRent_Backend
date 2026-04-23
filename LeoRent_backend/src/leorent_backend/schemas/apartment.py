@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, ConfigDict, Field
 from typing import Optional, Dict, Any, List
 from uuid import UUID
+from datetime import datetime
 
 
 # ==== ALLOWED CONSTANTS
@@ -205,6 +206,7 @@ class ApartmentPreviewResponse(BaseModel):
     is_liked_by_current_user: bool = False
     owner_type: str = Field(alias="owner")
     picture: Optional[str] = None
+    created_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -223,6 +225,13 @@ class ApartmentPreviewResponse(BaseModel):
     def transform_id_to_str(cls, v: Any) -> str:
         if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
             return str(v)
+        return v
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def transform_created_at_to_str(cls, v: Any) -> str:
+        if isinstance(v, datetime):
+            return v.isoformat()
         return v
 
 
