@@ -11,6 +11,7 @@ import src.leorent_backend.database.user as user_db
 from typing import Optional, List
 from src.leorent_backend.schemas.filter import FilterApartment
 from sqlalchemy import func
+from datetime import datetime
 
 
 async def get_apartments(
@@ -21,6 +22,13 @@ async def get_apartments(
     sort: str = "newest",
 ) -> tuple[list, int]:
     try:
+        # Validate sort parameter
+        valid_sorts = ["newest", "oldest", "price_asc", "price_desc"]
+        if sort not in valid_sorts:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid sort parameter. Must be one of: {valid_sorts}"
+            )
         filters = filters or {}
         conditions = [Apartment.is_deleted == False]  # noqa
 
@@ -52,11 +60,15 @@ async def get_apartments(
 
         # sort
         from sqlalchemy import asc, desc
-        order = desc(Apartment.id_)
+        order = desc(Apartment.created_at)  # Default: newest first
         if sort == "price_asc":
             order = asc(Apartment.cost)
         elif sort == "price_desc":
             order = desc(Apartment.cost)
+        elif sort == "oldest":
+            order = asc(Apartment.created_at)
+        elif sort == "newest":
+            order = desc(Apartment.created_at)
 
         # total count
         count_q = select(func.count()).select_from(Apartment).where(*conditions)

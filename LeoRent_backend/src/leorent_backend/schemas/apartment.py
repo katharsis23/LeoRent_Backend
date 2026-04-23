@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, ConfigDict, Field
 from typing import Optional, Dict, Any, List
 from uuid import UUID
+from datetime import datetime
 
 
 # ==== ALLOWED CONSTANTS
@@ -72,25 +73,25 @@ class ApartmentCreate(BaseModel):
 
     @field_validator('rooms')
     def rooms_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 12:
             raise ValueError('Rooms must be positive')
         return v
 
     @field_validator('square')
     def square_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 750:
             raise ValueError('Square must be positive')
         return v
 
     @field_validator('floor')
     def floor_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 100:
             raise ValueError('Floor must be positive')
         return v
 
     @field_validator('floor_in_house')
     def floor_in_house_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 100:
             raise ValueError('Floor in house must be positive')
         return v
 
@@ -205,6 +206,7 @@ class ApartmentPreviewResponse(BaseModel):
     is_liked_by_current_user: bool = False
     owner_type: str = Field(alias="owner")
     picture: Optional[str] = None
+    created_at: datetime
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -223,6 +225,13 @@ class ApartmentPreviewResponse(BaseModel):
     def transform_id_to_str(cls, v: Any) -> str:
         if isinstance(v, (UUID, object)) and hasattr(v, "__str__"):
             return str(v)
+        return v
+
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def transform_created_at_to_str(cls, v: Any) -> str:
+        if isinstance(v, datetime):
+            return v.isoformat()
         return v
 
 
