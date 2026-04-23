@@ -406,7 +406,8 @@ class ApartmentController:
 
     @apartment_router.get(
         path="/",
-        description="Get actual apartments with pagination given as query parameters",
+        description="""Get actual apartments with pagination and sorting.
+                   Sort options: newest (default), oldest, price_asc, price_desc""",
     )
     async def get_apartments(
         self,
@@ -472,6 +473,7 @@ class ApartmentController:
                         district=apartment.district,
                         owner_type=str(owner_type_val.value) if owner_type_val else None,
                         is_liked_by_current_user=is_liked,
+                        created_at=apartment.created_at,
                         picture=apartment.pictures[0].url if apartment.pictures else "https://leorent-photos.s3.eu-central-003.backblazeb2.com/apartments/default/default.jpg"
                     )
                 )
