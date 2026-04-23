@@ -73,25 +73,25 @@ class ApartmentCreate(BaseModel):
 
     @field_validator('rooms')
     def rooms_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 12:
             raise ValueError('Rooms must be positive')
         return v
 
     @field_validator('square')
     def square_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 750:
             raise ValueError('Square must be positive')
         return v
 
     @field_validator('floor')
     def floor_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 100:
             raise ValueError('Floor must be positive')
         return v
 
     @field_validator('floor_in_house')
     def floor_in_house_must_be_positive(cls, v):
-        if v < 0:
+        if v < 0 or v > 100:
             raise ValueError('Floor in house must be positive')
         return v
 
