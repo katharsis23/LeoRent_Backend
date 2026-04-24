@@ -51,22 +51,39 @@ class FilterRouter:
             )
             logger.info(f"DB response: {apartments_db}")
 
+            apartments = [
+                ApartmentPreviewResponse(
+                     id_=apartment.id_,
+                        title=apartment.title,
+                        cost=apartment.cost,
+                        rooms=apartment.rooms,
+                        square=apartment.square,
+                        floor=apartment.floor,
+                        floor_in_house=apartment.floor_in_house,
+                        rent_type=apartment.rent_type.value,
+                        type_=apartment.type_,
+                        renovation_type=apartment.renovation_type,
+                        location=apartment.location,
+                        district=apartment.district,
+                        owner_type=str(apartment.owner.type_.value) if apartment.owner.type_.value else None,
+                        is_liked_by_current_user=None,
+                        created_at=apartment.created_at,
+                        picture=apartment.pictures[0].url if apartment.pictures else "https://leorent-photos.s3.eu-central-003.backblazeb2.com/apartments/default/default.jpg"
+                ).model_dump(mode="json") for apartment in apartments_db
+            ]
+
             # 4. Wrap into the response schema
             # We use list comprehension to ensure every DB model is validated
             # Ensure your ApartmentPreviewResponse has 'from_attributes = True'
             # in its Config
-            response_data = ApartmentPreviewListResponse(
-                apartments=[
-                    ApartmentPreviewResponse.model_validate(apt, from_attributes=True)
-                    for apt in apartments_db
-                ]
-            )
-            logger.info(f"Response data: {response_data}")
+            logger.info(f"Response data: {apartments}")
 
             # 5. Return as JSONResponse
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
-                content=response_data.model_dump(mode="json")
+                content={
+                    "apartments": apartments
+                }
             )
 
         except Exception as e:
