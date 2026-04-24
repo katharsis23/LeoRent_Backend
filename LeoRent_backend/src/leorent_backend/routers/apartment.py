@@ -421,6 +421,8 @@ class ApartmentController:
         square_max: float | None = None,
         floor_min: int | None = None,
         floor_max: int | None = None,
+        renovation_type: str | None = None,
+        building_type: str | None = None,
         rent_type: str | None = None,
         owner_type: str | None = None,
         sort: str = "newest",
@@ -436,6 +438,8 @@ class ApartmentController:
                 "square_max": square_max,
                 "floor_min": floor_min,
                 "floor_max": floor_max,
+                "renovation_type": renovation_type,
+                "building_type": building_type,
                 "rent_type": rent_type,
                 "owner_type": owner_type,
             }

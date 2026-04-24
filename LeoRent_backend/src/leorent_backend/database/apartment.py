@@ -22,7 +22,6 @@ async def get_apartments(
     sort: str = "newest",
 ) -> tuple[list, int]:
     try:
-        # Validate sort parameter
         valid_sorts = ["newest", "oldest", "price_asc", "price_desc"]
         if sort not in valid_sorts:
             raise HTTPException(
@@ -48,6 +47,10 @@ async def get_apartments(
             conditions.append(Apartment.floor >= filters["floor_min"])
         if filters.get("floor_max"):
             conditions.append(Apartment.floor <= filters["floor_max"])
+        if filters.get("renovation_type"):
+            conditions.append(Apartment.renovation_type == filters["renovation_type"])
+        if filters.get("building_type"):
+            conditions.append(Apartment.type_ == filters["building_type"])
         if filters.get("rent_type") and filters["rent_type"] != "all":
             conditions.append(Apartment.rent_type == filters["rent_type"])
         if filters.get("owner_type") and filters["owner_type"] != "all":
@@ -58,9 +61,8 @@ async def get_apartments(
                 )
             )
 
-        # sort
         from sqlalchemy import asc, desc
-        order = desc(Apartment.created_at)  # Default: newest first
+        order = desc(Apartment.created_at)
         if sort == "price_asc":
             order = asc(Apartment.cost)
         elif sort == "price_desc":
@@ -70,11 +72,9 @@ async def get_apartments(
         elif sort == "newest":
             order = desc(Apartment.created_at)
 
-        # total count
         count_q = select(func.count()).select_from(Apartment).where(*conditions)
         total = (await db.execute(count_q)).scalar() or 0
 
-        # paginated
         q = (
             select(Apartment)
             .options(selectinload(Apartment.pictures))
@@ -339,7 +339,6 @@ async def delete_apartment(
     user_id: UUID
 ) -> bool:
     try:
-        # Find apartment without filtering by is_deleted
         result = await db.execute(
             select(Apartment)
             .where(Apartment.id_ == apartment_id)
@@ -350,7 +349,6 @@ async def delete_apartment(
             return False
 
         if apartment.is_deleted:
-            # Already deleted, return False to indicate nothing was deleted
             return False
 
         if apartment.owner != user_id:
@@ -426,12 +424,7 @@ async def toggle_like_apartment(
     apartment_id: UUID,
     user_id: UUID
 ) -> dict:
-    """
-    Toggle like status for an apartment.
-    Returns dict with action taken and apartment_id.
-    """
     try:
-        # Check if apartment exists and is not deleted
         apartment_result = await db.execute(
             select(Apartment)
             .where(Apartment.id_ == apartment_id)
@@ -442,7 +435,6 @@ async def toggle_like_apartment(
         if not apartment:
             return {"error": "Apartment not found or deleted"}
 
-        # Check if already liked
         result = await db.execute(
             select(Liked)
             .where(Liked.apartment_id == apartment_id)
@@ -451,7 +443,6 @@ async def toggle_like_apartment(
         existing = result.scalar_one_or_none()
 
         if existing:
-            # Unlike - remove the like
             await db.delete(existing)
             await db.commit()
             return {
@@ -460,7 +451,6 @@ async def toggle_like_apartment(
                 "message": "Apartment unliked successfully"
             }
         else:
-            # Like - add new like
             like = Liked(apartment_id=apartment_id, user_id=user_id)
             db.add(like)
             await db.commit()
@@ -480,7 +470,6 @@ async def like_apartment(
     user_id: UUID
 ) -> Optional[Apartment]:
     try:
-        # Check if already liked
         result = await db.execute(
             select(Liked)
             .where(Liked.apartment_id == apartment_id)
@@ -489,9 +478,8 @@ async def like_apartment(
         existing = result.scalar_one_or_none()
 
         if existing:
-            return None  # Already liked
+            return None
 
-        # Create new like
         like = Liked(apartment_id=apartment_id, user_id=user_id)
         db.add(like)
         await db.commit()
@@ -511,7 +499,6 @@ async def get_apartments_by_gemini_filter(
         query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
         data = filter_query.model_dump(exclude_unset=True)
 
-        # Mapping logic for ranges
         if data.get("cost"):
             query = query.where(Apartment.cost.between(
                 int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
@@ -522,13 +509,11 @@ async def get_apartments_by_gemini_filter(
                     data["square"] * 0.8,
                     data["square"] * 1.2))
 
-        # Exact matches for non-zero/non-null values
         for field in ["renovation_type", "type_", "rooms", "floor"]:
             val = data.get(field)
             if val:
                 query = query.where(getattr(Apartment, field) == val)
 
-        # Execute with pagination
         result = await db.execute(
             query.offset((current_page - 1) * page_size).limit(page_size)
         )
