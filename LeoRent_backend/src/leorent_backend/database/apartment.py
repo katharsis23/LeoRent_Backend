@@ -496,12 +496,15 @@ async def get_apartments_by_gemini_filter(
     page_size: int = 10
 ) -> List[Apartment]:
     try:
-        query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
-        
+        query = select(Apartment).options(
+            selectinload(Apartment.pictures),
+            selectinload(Apartment.owner_user)
+        ).where(Apartment.is_deleted == False)      # noqa: E712
+
         # Location and District (using ILIKE for fuzzy matching)
         if filter_query.location:
             query = query.where(Apartment.location.ilike(f"%{filter_query.location}%"))
-        
+
         if filter_query.district:
             query = query.where(Apartment.district.ilike(f"%{filter_query.district}%"))
 
@@ -524,10 +527,10 @@ async def get_apartments_by_gemini_filter(
         # Exact match filters
         if filter_query.renovation_type:
             query = query.where(Apartment.renovation_type == filter_query.renovation_type)
-        
+
         if filter_query.type_:
             query = query.where(Apartment.type_ == filter_query.type_)
-            
+
         if filter_query.rent_type:
             query = query.where(Apartment.rent_type == filter_query.rent_type)
 

@@ -2,7 +2,6 @@ from pydantic import BaseModel, field_validator
 from src.leorent_backend.models import RentType
 from typing import Optional, Any, Dict
 from src.leorent_backend.schemas.apartment import ALLOWED_FIELDS, ALLOWED_RENT_TYPES, ALLOWED_TYPES
-from math import inf
 
 
 class FilterPrompt(BaseModel):
@@ -22,7 +21,7 @@ class FilterApartment(BaseModel):
     type_: Optional[str] = None
     renovation_type: Optional[str] = None
     rent_type: Optional[RentType] = None
-    
+
     min_cost: Optional[int] = None
     max_cost: Optional[int] = None
     min_square: Optional[float] = None
@@ -33,7 +32,7 @@ class FilterApartment(BaseModel):
     max_floor: Optional[int] = None
     min_floor_in_house: Optional[int] = None
     max_floor_in_house: Optional[int] = None
-    
+
     details: Optional[Dict[str, bool]] = None
 
     @field_validator("min_cost", "max_cost")
