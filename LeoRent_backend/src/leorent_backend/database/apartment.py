@@ -496,7 +496,10 @@ async def get_apartments_by_gemini_filter(
     page_size: int = 10
 ) -> List[Apartment]:
     try:
-        query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
+        query = select(Apartment).options(
+            selectinload(Apartment.pictures),
+            selectinload(Apartment.owner_user)
+        ).where(Apartment.is_deleted == False)      # noqa: E712
         
         # Location and District (using ILIKE for fuzzy matching)
         if filter_query.location:
