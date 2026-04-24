@@ -14,7 +14,6 @@ from sqlalchemy import func
 from datetime import datetime
 
 
-
 async def get_apartments(
     db: AsyncSession,
     current_page: int = 1,
@@ -48,12 +47,10 @@ async def get_apartments(
             conditions.append(Apartment.floor >= filters["floor_min"])
         if filters.get("floor_max"):
             conditions.append(Apartment.floor <= filters["floor_max"])
-        # ↓ НОВІ ФІЛЬТРИ
         if filters.get("renovation_type"):
             conditions.append(Apartment.renovation_type == filters["renovation_type"])
         if filters.get("building_type"):
             conditions.append(Apartment.type_ == filters["building_type"])
-        # ↑
         if filters.get("rent_type") and filters["rent_type"] != "all":
             conditions.append(Apartment.rent_type == filters["rent_type"])
         if filters.get("owner_type") and filters["owner_type"] != "all":
@@ -92,7 +89,6 @@ async def get_apartments(
     except Exception as e:
         logger.error(f"Error getting apartments: {e}")
         raise e
-
 
 
 async def create_apartment(
@@ -142,7 +138,6 @@ async def create_apartment(
         raise e
 
 
-
 async def get_apartment(db: AsyncSession, apartment_id: UUID):
     try:
         result = await db.execute(
@@ -158,7 +153,6 @@ async def get_apartment(db: AsyncSession, apartment_id: UUID):
     except Exception as e:
         logger.error(f"Error getting apartment: {e}")
         raise e
-
 
 
 async def add_apartment_pictures(
@@ -187,7 +181,6 @@ async def add_apartment_pictures(
     except Exception as e:
         logger.error(f"Error adding apartment pictures: {e}")
         raise e
-
 
 
 async def soft_delete_all_apartment_pictures(
@@ -224,7 +217,6 @@ async def soft_delete_all_apartment_pictures(
     except Exception as e:
         logger.error(f"Error soft deleting all apartment pictures: {e}")
         raise e
-
 
 
 async def soft_delete_apartment_picture(
@@ -267,7 +259,6 @@ async def soft_delete_apartment_picture(
         raise e
 
 
-
 async def is_allowed_to_create_apartment(
         db: AsyncSession, user_id: UUID) -> bool:
     try:
@@ -279,7 +270,6 @@ async def is_allowed_to_create_apartment(
         logger.error(
             f"Error checking if user is allowed to create apartment: {e}")
         raise e
-
 
 
 async def get_user_type_from_apartment(
@@ -294,7 +284,6 @@ async def get_user_type_from_apartment(
     except Exception as e:
         logger.error(f"Error getting user type from apartment: {e}")
         raise e
-
 
 
 async def is_apartment_liked_by_user(
@@ -313,7 +302,6 @@ async def is_apartment_liked_by_user(
     except Exception as e:
         logger.error(f"Error checking if apartment is liked by user: {e}")
         raise e
-
 
 
 async def update_apartment(
@@ -343,7 +331,6 @@ async def update_apartment(
     except Exception as e:
         logger.error(f"Error updating apartment: {e}")
         raise e
-
 
 
 async def delete_apartment(
@@ -385,7 +372,6 @@ async def delete_apartment(
         raise e
 
 
-
 async def get_apartments_by_user(
     db: AsyncSession,
     user_id: UUID,
@@ -407,7 +393,6 @@ async def get_apartments_by_user(
     except Exception as e:
         logger.error(f"Error getting apartments by user: {e}")
         raise e
-
 
 
 async def get_liked_apartments_by_user(
@@ -432,7 +417,6 @@ async def get_liked_apartments_by_user(
     except Exception as e:
         logger.error(f"Error getting liked apartments by user: {e}")
         raise e
-
 
 
 async def toggle_like_apartment(
@@ -480,7 +464,6 @@ async def toggle_like_apartment(
         raise e
 
 
-
 async def like_apartment(
     db: AsyncSession,
     apartment_id: UUID,
@@ -504,7 +487,6 @@ async def like_apartment(
     except Exception as e:
         logger.error(f"Error liking apartment: {e}")
         raise e
-
 
 
 async def get_apartments_by_gemini_filter(
@@ -539,7 +521,6 @@ async def get_apartments_by_gemini_filter(
     except Exception as e:
         logger.error(f"Error getting apartments by Gemini filter: {e}")
         raise e
-
 
 
 async def get_apartment_first_photo(
