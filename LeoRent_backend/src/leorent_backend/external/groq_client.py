@@ -6,7 +6,6 @@ from typing import Dict, Any
 from fastapi import HTTPException, status
 
 
-
 class GroqClient:
     def __init__(self):
         self.client = AsyncGroq(
@@ -32,9 +31,9 @@ class GroqClient:
                 model=self.model_name,
                 # Enforces JSON output
                 response_format={"type": "json_object"},
-                temperature=0.1, # Keep it deterministic for extraction
+                temperature=0.1,
             )
-            
+
             content = chat_completion.choices[0].message.content
             logger.debug(f"Groq response: {content}")
             if content:

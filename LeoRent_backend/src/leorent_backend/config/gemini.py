@@ -63,7 +63,7 @@ NORMALIZATION RULES:
 
 1. RANGES (DIAPASONS):
    - "around 1000" → min_cost: 900, max_cost: 1100 (±10%)
-   - "up to 1500" → min_cost: null, max_cost: 1500 
+   - "up to 1500" → min_cost: null, max_cost: 1500
    - "at least 500" → min_cost: 500, max_cost: null
    - "from 800 to 1200" → min_cost: 800, max_cost: 1200
    - Apply same logic to square, rooms, floor.

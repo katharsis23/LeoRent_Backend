@@ -55,7 +55,7 @@ class FilterRouter:
 
             apartments = [
                 ApartmentPreviewResponse(
-                     id_=str(apartment.id_),
+                        id_=str(apartment.id_),
                         title=apartment.title,
                         cost=apartment.cost,
                         rooms=apartment.rooms,
@@ -94,7 +94,7 @@ class FilterRouter:
                 status_code=500,
                 content={"detail": "Failed to search apartments."}
             )
-        
+
     @filter_router.get("/ai-prompt/groq")
     async def get_groq_prompt(
         self,
@@ -122,7 +122,7 @@ class FilterRouter:
             )
             apartments = [
                 ApartmentPreviewResponse(
-                     id_=str(apartment.id_),
+                        id_=str(apartment.id_),
                         title=apartment.title,
                         cost=apartment.cost,
                         rooms=apartment.rooms,
@@ -154,8 +154,6 @@ class FilterRouter:
                     "apartments": apartments
                 }
             )
-
-
         except Exception as e:
             logger.error(f"Error getting Groq prompt: {e}")
             return JSONResponse(
