@@ -14,6 +14,7 @@ from sqlalchemy import func
 from datetime import datetime
 
 
+
 async def get_apartments(
     db: AsyncSession,
     current_page: int = 1,
@@ -22,7 +23,6 @@ async def get_apartments(
     sort: str = "newest",
 ) -> tuple[list, int]:
     try:
-        # Validate sort parameter
         valid_sorts = ["newest", "oldest", "price_asc", "price_desc"]
         if sort not in valid_sorts:
             raise HTTPException(
@@ -48,6 +48,12 @@ async def get_apartments(
             conditions.append(Apartment.floor >= filters["floor_min"])
         if filters.get("floor_max"):
             conditions.append(Apartment.floor <= filters["floor_max"])
+        # ↓ НОВІ ФІЛЬТРИ
+        if filters.get("renovation_type"):
+            conditions.append(Apartment.renovation_type == filters["renovation_type"])
+        if filters.get("building_type"):
+            conditions.append(Apartment.type_ == filters["building_type"])
+        # ↑
         if filters.get("rent_type") and filters["rent_type"] != "all":
             conditions.append(Apartment.rent_type == filters["rent_type"])
         if filters.get("owner_type") and filters["owner_type"] != "all":
@@ -58,9 +64,8 @@ async def get_apartments(
                 )
             )
 
-        # sort
         from sqlalchemy import asc, desc
-        order = desc(Apartment.created_at)  # Default: newest first
+        order = desc(Apartment.created_at)
         if sort == "price_asc":
             order = asc(Apartment.cost)
         elif sort == "price_desc":
@@ -70,11 +75,9 @@ async def get_apartments(
         elif sort == "newest":
             order = desc(Apartment.created_at)
 
-        # total count
         count_q = select(func.count()).select_from(Apartment).where(*conditions)
         total = (await db.execute(count_q)).scalar() or 0
 
-        # paginated
         q = (
             select(Apartment)
             .options(selectinload(Apartment.pictures))
@@ -89,6 +92,7 @@ async def get_apartments(
     except Exception as e:
         logger.error(f"Error getting apartments: {e}")
         raise e
+
 
 
 async def create_apartment(
@@ -138,6 +142,7 @@ async def create_apartment(
         raise e
 
 
+
 async def get_apartment(db: AsyncSession, apartment_id: UUID):
     try:
         result = await db.execute(
@@ -153,6 +158,7 @@ async def get_apartment(db: AsyncSession, apartment_id: UUID):
     except Exception as e:
         logger.error(f"Error getting apartment: {e}")
         raise e
+
 
 
 async def add_apartment_pictures(
@@ -181,6 +187,7 @@ async def add_apartment_pictures(
     except Exception as e:
         logger.error(f"Error adding apartment pictures: {e}")
         raise e
+
 
 
 async def soft_delete_all_apartment_pictures(
@@ -217,6 +224,7 @@ async def soft_delete_all_apartment_pictures(
     except Exception as e:
         logger.error(f"Error soft deleting all apartment pictures: {e}")
         raise e
+
 
 
 async def soft_delete_apartment_picture(
@@ -259,6 +267,7 @@ async def soft_delete_apartment_picture(
         raise e
 
 
+
 async def is_allowed_to_create_apartment(
         db: AsyncSession, user_id: UUID) -> bool:
     try:
@@ -270,6 +279,7 @@ async def is_allowed_to_create_apartment(
         logger.error(
             f"Error checking if user is allowed to create apartment: {e}")
         raise e
+
 
 
 async def get_user_type_from_apartment(
@@ -284,6 +294,7 @@ async def get_user_type_from_apartment(
     except Exception as e:
         logger.error(f"Error getting user type from apartment: {e}")
         raise e
+
 
 
 async def is_apartment_liked_by_user(
@@ -302,6 +313,7 @@ async def is_apartment_liked_by_user(
     except Exception as e:
         logger.error(f"Error checking if apartment is liked by user: {e}")
         raise e
+
 
 
 async def update_apartment(
@@ -333,13 +345,13 @@ async def update_apartment(
         raise e
 
 
+
 async def delete_apartment(
     db: AsyncSession,
     apartment_id: UUID,
     user_id: UUID
 ) -> bool:
     try:
-        # Find apartment without filtering by is_deleted
         result = await db.execute(
             select(Apartment)
             .where(Apartment.id_ == apartment_id)
@@ -350,7 +362,6 @@ async def delete_apartment(
             return False
 
         if apartment.is_deleted:
-            # Already deleted, return False to indicate nothing was deleted
             return False
 
         if apartment.owner != user_id:
@@ -374,6 +385,7 @@ async def delete_apartment(
         raise e
 
 
+
 async def get_apartments_by_user(
     db: AsyncSession,
     user_id: UUID,
@@ -395,6 +407,7 @@ async def get_apartments_by_user(
     except Exception as e:
         logger.error(f"Error getting apartments by user: {e}")
         raise e
+
 
 
 async def get_liked_apartments_by_user(
@@ -421,17 +434,13 @@ async def get_liked_apartments_by_user(
         raise e
 
 
+
 async def toggle_like_apartment(
     db: AsyncSession,
     apartment_id: UUID,
     user_id: UUID
 ) -> dict:
-    """
-    Toggle like status for an apartment.
-    Returns dict with action taken and apartment_id.
-    """
     try:
-        # Check if apartment exists and is not deleted
         apartment_result = await db.execute(
             select(Apartment)
             .where(Apartment.id_ == apartment_id)
@@ -442,7 +451,6 @@ async def toggle_like_apartment(
         if not apartment:
             return {"error": "Apartment not found or deleted"}
 
-        # Check if already liked
         result = await db.execute(
             select(Liked)
             .where(Liked.apartment_id == apartment_id)
@@ -451,7 +459,6 @@ async def toggle_like_apartment(
         existing = result.scalar_one_or_none()
 
         if existing:
-            # Unlike - remove the like
             await db.delete(existing)
             await db.commit()
             return {
@@ -460,7 +467,6 @@ async def toggle_like_apartment(
                 "message": "Apartment unliked successfully"
             }
         else:
-            # Like - add new like
             like = Liked(apartment_id=apartment_id, user_id=user_id)
             db.add(like)
             await db.commit()
@@ -474,13 +480,13 @@ async def toggle_like_apartment(
         raise e
 
 
+
 async def like_apartment(
     db: AsyncSession,
     apartment_id: UUID,
     user_id: UUID
 ) -> Optional[Apartment]:
     try:
-        # Check if already liked
         result = await db.execute(
             select(Liked)
             .where(Liked.apartment_id == apartment_id)
@@ -489,9 +495,8 @@ async def like_apartment(
         existing = result.scalar_one_or_none()
 
         if existing:
-            return None  # Already liked
+            return None
 
-        # Create new like
         like = Liked(apartment_id=apartment_id, user_id=user_id)
         db.add(like)
         await db.commit()
@@ -499,6 +504,7 @@ async def like_apartment(
     except Exception as e:
         logger.error(f"Error liking apartment: {e}")
         raise e
+
 
 
 async def get_apartments_by_gemini_filter(
@@ -511,7 +517,6 @@ async def get_apartments_by_gemini_filter(
         query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
         data = filter_query.model_dump(exclude_unset=True)
 
-        # Mapping logic for ranges
         if data.get("cost"):
             query = query.where(Apartment.cost.between(
                 int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
@@ -522,13 +527,11 @@ async def get_apartments_by_gemini_filter(
                     data["square"] * 0.8,
                     data["square"] * 1.2))
 
-        # Exact matches for non-zero/non-null values
         for field in ["renovation_type", "type_", "rooms", "floor"]:
             val = data.get(field)
             if val:
                 query = query.where(getattr(Apartment, field) == val)
 
-        # Execute with pagination
         result = await db.execute(
             query.offset((current_page - 1) * page_size).limit(page_size)
         )
@@ -536,6 +539,7 @@ async def get_apartments_by_gemini_filter(
     except Exception as e:
         logger.error(f"Error getting apartments by Gemini filter: {e}")
         raise e
+
 
 
 async def get_apartment_first_photo(
