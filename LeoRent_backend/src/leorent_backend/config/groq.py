@@ -3,15 +3,14 @@ from pydantic import Field, SecretStr
 from typing import Dict, Any, Optional
 
 
-class GeminiSettings(BaseSettings):
+class GroqSettings(BaseSettings):
     api_key: SecretStr = Field(
         default=SecretStr(""),
-        alias="GEMINI_API_KEY"
+        alias="ALTERNATIVE_API_KEY"
     )
 
     model_name: str = Field(
-        default="gemini-3-flash",
-        alias="GEMINI_MODEL_NAME"
+        default="llama-3.1-8b-instant"
     )
 
     default_prompt: str = """
@@ -124,11 +123,6 @@ EXAMPLE OUTPUT:
 }
 """
 
-    ai_model_config: Optional[Dict[Any, Any]] = Field(
-        default={},
-        alias="GEMINI_MODEL_CONFIG"
-    )
-
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
@@ -136,4 +130,4 @@ EXAMPLE OUTPUT:
     )
 
 
-GEMINI_SETTINGS = GeminiSettings()
+GROQ_SETTINGS = GroqSettings()

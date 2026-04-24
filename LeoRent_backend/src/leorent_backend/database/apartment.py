@@ -496,23 +496,51 @@ async def get_apartments_by_gemini_filter(
     page_size: int = 10
 ) -> List[Apartment]:
     try:
-        query = select(Apartment).where(Apartment.is_deleted == False)      # noqa: E712
-        data = filter_query.model_dump(exclude_unset=True)
+        query = select(Apartment).options(
+            selectinload(Apartment.pictures),
+            selectinload(Apartment.owner_user)
+        ).where(Apartment.is_deleted == False)      # noqa: E712
 
-        if data.get("cost"):
-            query = query.where(Apartment.cost.between(
-                int(data["cost"] * 0.8), int(data["cost"] * 1.2)))
+        # Location and District (using ILIKE for fuzzy matching)
+        if filter_query.location:
+            query = query.where(Apartment.location.ilike(f"%{filter_query.location}%"))
 
-        if data.get("square"):
-            query = query.where(
-                Apartment.square.between(
-                    data["square"] * 0.8,
-                    data["square"] * 1.2))
+        if filter_query.district:
+            query = query.where(Apartment.district.ilike(f"%{filter_query.district}%"))
 
-        for field in ["renovation_type", "type_", "rooms", "floor"]:
-            val = data.get(field)
-            if val:
-                query = query.where(getattr(Apartment, field) == val)
+        # Range filters
+        range_mappings = [
+            ("cost", filter_query.min_cost, filter_query.max_cost),
+            ("rooms", filter_query.min_rooms, filter_query.max_rooms),
+            ("square", filter_query.min_square, filter_query.max_square),
+            ("floor", filter_query.min_floor, filter_query.max_floor),
+            ("floor_in_house", filter_query.min_floor_in_house, filter_query.max_floor_in_house),
+        ]
+
+        for field_name, min_val, max_val in range_mappings:
+            column = getattr(Apartment, field_name)
+            if min_val is not None:
+                query = query.where(column >= min_val)
+            if max_val is not None:
+                query = query.where(column <= max_val)
+
+        # Exact match filters
+        if filter_query.renovation_type:
+            query = query.where(Apartment.renovation_type == filter_query.renovation_type)
+
+        if filter_query.type_:
+            query = query.where(Apartment.type_ == filter_query.type_)
+
+        if filter_query.rent_type:
+            query = query.where(Apartment.rent_type == filter_query.rent_type)
+
+        # Details (JSON filtering)
+        if filter_query.details:
+            for key, value in filter_query.details.items():
+                if value is not None:
+                    # Using PostgreSQL JSON operator for boolean match
+                    # Assuming details is a JSON column and values are booleans
+                    query = query.where(Apartment.details[key].as_boolean() == value)
 
         result = await db.execute(
             query.offset((current_page - 1) * page_size).limit(page_size)

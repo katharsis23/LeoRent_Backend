@@ -23,6 +23,7 @@ RUN pip install poetry
 # Dependencies copy
 COPY LeoRent_backend/poetry.lock LeoRent_backend/pyproject.toml ./
 
+RUN poetry lock
 # Dependencies install
 ARG MODE=debug
 RUN if [ "$MODE" = "production" ]; then \

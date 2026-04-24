@@ -225,6 +225,7 @@ leorent-*.json
 # Alembic
 alembic/
 alembic.ini
+migrations/
 
 # Firebase test
 firebase_test.html
