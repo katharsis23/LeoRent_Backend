@@ -80,7 +80,7 @@ NORMALIZATION RULES:
    - If not mentioned → null
 
 4. LOCATION & DISTRICT (CRITICAL):
-   - location is usually a street name or POI in Lviv. Extract ONLY the core name, WITHOUT prefixes/prepositions ("вулиця", "вул.", "на", "в", "біля"). 
+   - location is usually a street name or POI in Lviv. Extract ONLY the core name, WITHOUT prefixes/prepositions ("вулиця", "вул.", "на", "в", "біля").
      * Example: "на Стрийській" → location: "Стрийська"
    - district MUST be one of the following EXACT Ukrainian strings, based on the synonyms:
      * "Сихівський" (matches: сихів, на сихові, sykhiv, syhiw, сихівський, в Сихівському районі)
@@ -154,4 +154,3 @@ EXAMPLE OUTPUT:
 
 
 GROQ_SETTINGS = GroqSettings()
-
