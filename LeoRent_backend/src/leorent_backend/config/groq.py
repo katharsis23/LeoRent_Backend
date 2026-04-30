@@ -60,45 +60,68 @@ SCHEMA (STRICT):
 ----------------------------------------
 NORMALIZATION RULES:
 
-1. RANGES (DIAPASONS):
-   - "around 1000" → min_cost: 900, max_cost: 1100 (±10%)
-   - "up to 1500" → min_cost: null, max_cost: 1500
-   - "at least 500" → min_cost: 500, max_cost: null
-   - "from 800 to 1200" → min_cost: 800, max_cost: 1200
-   - Apply same logic to square, rooms, floor.
-   - So basically use +-15% difference
+1. RANGES (DIAPASONS) & PRICE RULES (CRITICAL):
+   - "за X", "до X", "не дорожче X", "близько X" (e.g., "за 25000", "до 25к", "around X", "up to X") → min_cost is X - 10%, max_cost is X. (e.g., "до 25000" → min_cost: 22500, max_cost: 25000).
+   - "від X", "мінімум X" (e.g., "від 10000", "at least X") → min_cost: X, max_cost: null.
+   - "від X до Y" (e.g., "від 10 до 15 тисяч") → min_cost: X, max_cost: Y.
+   - Apply the same logic to square, rooms, floor.
 
 2. SYNONYMS:
-   - "new building", "modern house" → type_: "monolith"
-   - "old panel", "soviet panel" → type_: "panel"
-   - "brick house" → type_: "brick"
-   - "modern renovation", "designer renovation" → renovation_type: "euro"
-   - "simple renovation", "ordinary renovation" → renovation_type: "cosmetic"
-   - "no renovation", "state after builders" → renovation_type: "none"
+   - "new building", "modern house", "новобудова" → type_: "monolith"
+   - "old panel", "soviet panel", "панелька" → type_: "panel"
+   - "brick house", "цегляний" → type_: "brick"
+   - "modern renovation", "designer renovation", "євроремонт", "сучасний ремонт" → renovation_type: "euro"
+   - "simple renovation", "ordinary renovation", "косметичний ремонт" → renovation_type: "cosmetic"
+   - "no renovation", "state after builders", "без ремонту", "після будівельників" → renovation_type: "none"
 
 3. FEATURES:
-   - If a feature is mentioned as desired (e.g., "with wifi") → true
-   - If a feature is mentioned as NOT desired (e.g., "no pets", "without elevator") → false
+   - If a feature is mentioned as desired (e.g., "with wifi", "з вайфаєм") → true
+   - If a feature is mentioned as NOT desired (e.g., "no pets", "без тварин") → false
    - If not mentioned → null
 
-4. LOCATION & DISTRICT:
-   - location is usually a street name in Lviv.
-   - district should be one of Lviv's districts (e.g., Sykhivskyi, Frankivskyi, Lychakivskyi, Halytskyi, Zaliznychnyi, Shevchenkivskyi).
+4. LOCATION & DISTRICT (CRITICAL):
+   - location is usually a street name or POI in Lviv. Extract ONLY the core name, WITHOUT prefixes/prepositions ("вулиця", "вул.", "на", "в", "біля").
+     * Example: "на Стрийській" → location: "Стрийська"
+   - district MUST be one of the following EXACT Ukrainian strings, based on the synonyms:
+     * "Сихівський" (matches: сихів, на сихові, sykhiv, syhiw, сихівський, в Сихівському районі)
+     * "Франківський" (matches: франківський, на франківському, frankivskyi, франківськ, в Франківському районі)
+     * "Личаківський" (matches: личаківський, личаків, lychakiv, lychakivskyi, в Личаківському районі)
+     * "Галицький" (matches: галицький, в центрі, центр, halytskyi, center, середмістя, в Галицькому районі)
+     * "Залізничний" (matches: залізничний, zaliznychnyi, біля вокзалу, левандівка, в Залізничному районі)
+     * "Шевченківський" (matches: шевченківський, shevchenkivskyi, чорновола, в Шевченківському районі)
+
+5. RENT TYPE & SLANG FOR PRICES:
+   - "подобово", "на добу", "на ніч" → rent_type: "DAILY"
+   - "довгостроково", "на місяць", "на тривалий час" → rent_type: "DEFAULT"
+   - Prices like "15к", "15 тисяч", "15 тис" must be converted to full numbers: 15000.
+
+6. DETAILS & AMENITIES SYNONYMS:
+   - conditioner: "кондиціонер", "кондьор", "спліт"
+   - washing_machine: "пралка", "пральна машина"
+   - animals (true): "з тваринами", "pet friendly", "можна з котиком", "з собакою"
+   - furniture (true): "з меблями", "мебльована"
+   - balcony: "балкон", "лоджія"
+   - elevator: "ліфт"
+
+7. FLOOR LOGIC:
+   - "не перший поверх", "не на першому поверсі", "вище першого" → min_floor: 2
+   - "перший поверх", "на першому" → min_floor: 1, max_floor: 1
 
 IMPORTANT:
 - If you can't parse a specific field, return null for it.
-- Do NOT hallucinate values. If the user doesn't specify a price, min_cost and max_cost MUST be null.
+- Do NOT hallucinate values.
+- Please emit STRICT VALID JSON ONLY. Comments inside JSON (like #) are strictly FORBIDDEN.
 
 ----------------------------------------
 EXAMPLE INPUT:
-"2-3 room apartment around 15000 with parking, no pets"
+"2-3 кімнатна квартира на сихові за 25000 з паркінгом, без тварин"
 
 EXAMPLE OUTPUT:
 {
   "location": null,
-  "district": null,
-  "min_cost": 13500,
-  "max_cost": 16500,
+  "district": "Сихівський",
+  "min_cost": 22500,
+  "max_cost": 25000,
   "rent_type": "DEFAULT",
   "min_rooms": 2,
   "max_rooms": 3,

@@ -31,7 +31,7 @@ class GroqClient:
                 model=self.model_name,
                 # Enforces JSON output
                 response_format={"type": "json_object"},
-                temperature=0.1,
+                temperature=0.0,
             )
 
             content = chat_completion.choices[0].message.content
